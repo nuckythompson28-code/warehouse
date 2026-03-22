@@ -141,7 +141,7 @@ async function loadShipmentData(){
 }
 
 // Apps Script 웹 앱 URL (배포 후 입력)
-const APPS_SCRIPT_URL = ''; // TODO: Apps Script 배포 URL 입력
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzr32X5GMnga-kbDkxqlevKkte_wnG7ADhjY-PAqH4TB8D6akN9P0L4SWPeBzX1Ua76eQ/exec';
 
 async function loadFromSheet(){
   try{
