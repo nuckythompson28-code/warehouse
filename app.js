@@ -895,7 +895,7 @@ function renderLabels(){
   }, 100);
 }
 
-function printQueue(){
+function printQueueLabels(){
   const wrap = document.getElementById('pqList');
   if(!wrap || !printQueue.length) { showToast('인쇄할 항목이 없습니다'); return; }
   const area = document.getElementById('pqPrintArea');

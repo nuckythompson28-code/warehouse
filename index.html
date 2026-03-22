@@ -128,7 +128,7 @@
       <div class="pq-count" id="pqCount">0개</div>
       <div style="flex:1"></div>
       <button class="pq-btn clear" onclick="clearPrintQueue()">전체삭제</button>
-      <button class="pq-btn print" onclick="printQueue()">A4 인쇄</button>
+      <button class="pq-btn print" onclick="printQueueLabels()">A4 인쇄</button>
     </div>
     <div id="pqList"></div>
   </div>
@@ -269,7 +269,7 @@
     originY = Math.max(minY, Math.min(margin, originY));
   }
 
-  function isOverview(){ return !currentSection; }
+  function isOverview(){ return typeof currentSection === 'undefined' || !currentSection; }
 
   function initScale(){
     if(isOverview()){
