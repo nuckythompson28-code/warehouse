@@ -863,6 +863,7 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
     <div class="logo">🏭 창고 맵</div>
     <div class="topbar-actions">
       <button class="recommend-btn" onclick="openRecommend()">★ 자리 추천</button>
+      <button class="recommend-btn" style="background:#6366f1;color:#fff" onclick="openOptimizer()">🧠 AI 배치</button>
       <div class="icon-btn" onclick="exportData()">📤</div>
       <label class="icon-btn" for="importFile">📥</label>
       <input id="importFile" type="file" accept=".json" style="display:none" onchange="handleImport(event)">
@@ -1085,6 +1086,25 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
     <button class="sheet-btn cancel" onclick="closeSheet()">취소</button>
     <button class="sheet-btn queue" onclick="addToQueue()">🏷 인쇄추가</button>
     <button class="sheet-btn save" onclick="saveSheet()">저장</button>
+  </div>
+</div>
+
+<!-- AI 배치 최적화 패널 -->
+<div class="popup-backdrop" id="optBackdrop" onclick="closeOptimizer()" style="display:none"></div>
+<div id="optimizerPanel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:var(--bg);overflow-y:auto;padding:16px;padding-bottom:100px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div style="font-family:'IBM Plex Mono';font-size:18px;font-weight:700;color:#6366f1">🧠 AI 배치 최적화</div>
+    <button onclick="closeOptimizer()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px">✕ 닫기</button>
+  </div>
+  <div style="background:var(--surface);border-radius:12px;padding:14px;margin-bottom:14px;border:1px solid var(--border)">
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px">📊 분석 요약</div>
+    <div id="optSummary" style="font-size:12px;color:var(--muted)">분석 중...</div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" id="optMatFilter"></div>
+  <div style="font-size:13px;font-weight:600;margin-bottom:8px">📋 이동 지시서 <span id="optMoveCount" style="color:var(--muted);font-weight:400"></span></div>
+  <div id="optMoves" style="display:flex;flex-direction:column;gap:8px"></div>
+  <div style="margin-top:20px;text-align:center">
+    <button onclick="applyOptimization()" style="background:#6366f1;color:#fff;border:none;border-radius:10px;padding:12px 32px;font-size:14px;font-weight:600;cursor:pointer">✅ 시뮬레이션 적용 (시트 반영 안 됨)</button>
   </div>
 </div>
 
@@ -4203,6 +4223,177 @@ loadFromSheet().then(()=>loadShipmentData()); // 서버 데이터 로드 후 갱
     longPressTimer=setTimeout(hideTip, 2500);
   },{passive:true});
 })();
+
+/* ══════════════════════════════════════
+   🧠 AI 배치 최적화 엔진
+   ══════════════════════════════════════ */
+
+let optMoves = []; // [{from:{section,floor,order,item,material}, to:{section,floor,order}}]
+let optFilterMat = null;
+
+function openOptimizer(){
+  document.getElementById('optBackdrop').style.display='block';
+  document.getElementById('optimizerPanel').style.display='block';
+  runOptimization();
+}
+function closeOptimizer(){
+  document.getElementById('optBackdrop').style.display='none';
+  document.getElementById('optimizerPanel').style.display='none';
+}
+
+function runOptimization(){
+  // 1. 입출고 빈도 TOP 품목 추출
+  const ranked = [];
+  data.forEach(d=>{
+    if(!d.item || !d.material) return;
+    const baseMat = (d.material||'').split(/[(\s]/)[0];
+    const key = baseMat + '|' + d.item.toLowerCase();
+    const info = shipmentData[key];
+    if(!info) return;
+    ranked.push({
+      id: d.id, key: d.key, section: d.section, floor: d.floor, order: d.order,
+      item: d.item, material: baseMat, qty: d.qty,
+      totalOut: info.totalOut||0, totalIn: info.totalIn||0,
+      total: (info.totalOut||0)+(info.totalIn||0),
+      rank: 0
+    });
+  });
+  ranked.sort((a,b)=>b.total-a.total);
+  ranked.forEach((r,i)=>r.rank=i+1);
+  const top100 = ranked.slice(0, 100);
+
+  // 2. 소재별 그룹핑
+  const matGroups = {};
+  top100.forEach(r=>{
+    if(!matGroups[r.material]) matGroups[r.material]=[];
+    matGroups[r.material].push(r);
+  });
+
+  // 3. 소재별 최적 섹션 할당 (현재 가장 많이 있는 섹션을 해당 소재의 허브로)
+  const matHub = {};
+  Object.entries(matGroups).forEach(([mat, items])=>{
+    const secCount = {};
+    items.forEach(it=>{ secCount[it.section]=(secCount[it.section]||0)+1; });
+    const bestSec = Object.entries(secCount).sort((a,b)=>b[1]-a[1])[0][0];
+    matHub[mat] = bestSec;
+  });
+
+  // 4. 빈 슬롯 수집 (허브 섹션 우선)
+  const emptySlots = data.filter(d=>!d.item && d.status!=='UNUSED')
+    .map(d=>({id:d.id, key:d.key, section:d.section, floor:d.floor, order:d.order, type:d.type}));
+
+  // 5. 이동 계획 생성
+  optMoves = [];
+  const usedSlots = new Set();
+
+  Object.entries(matGroups).forEach(([mat, items])=>{
+    const hub = matHub[mat];
+    // 이미 허브 섹션에 있는 건 이동 불필요
+    const needMove = items.filter(it=>it.section !== hub);
+    // 허브 섹션의 빈 슬롯 먼저, 그 다음 인접 섹션
+    const hubEmpty = emptySlots
+      .filter(s=>!usedSlots.has(s.key))
+      .sort((a,b)=>{
+        const aInHub = a.section===hub ? 0 : 1;
+        const bInHub = b.section===hub ? 0 : 1;
+        if(aInHub!==bInHub) return aInHub-bInHub;
+        return a.order-b.order;
+      });
+
+    needMove.forEach(item=>{
+      const target = hubEmpty.find(s=>!usedSlots.has(s.key));
+      if(!target) return;
+      usedSlots.add(target.key);
+      optMoves.push({
+        rank: item.rank,
+        material: mat,
+        item: item.item,
+        total: item.total,
+        totalOut: item.totalOut,
+        from: {section:item.section, floor:item.floor, order:item.order},
+        to: {section:target.section, floor:target.floor, order:target.order}
+      });
+    });
+  });
+
+  optMoves.sort((a,b)=>a.rank-b.rank);
+
+  // 6. 분석 요약 렌더
+  const summary = document.getElementById('optSummary');
+  const matList = Object.entries(matGroups).map(([mat,items])=>
+    `<b>${mat}</b>: ${items.length}개 (허브: ${matHub[mat]}섹션)`
+  ).join(' · ');
+  summary.innerHTML = `
+    입출고 빈도 TOP 100 품목 분석 완료<br>
+    ${matList}<br>
+    <b style="color:#6366f1">이동 추천: ${optMoves.length}건</b> (빈 슬롯 ${emptySlots.length}개 활용)
+  `;
+
+  // 7. 소재 필터 버튼
+  const filterEl = document.getElementById('optMatFilter');
+  const mats = [...new Set(optMoves.map(m=>m.material))];
+  filterEl.innerHTML = `<button onclick="optFilterMat=null;renderOptMoves()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:${!optFilterMat?'#6366f1':'var(--surface)'};color:${!optFilterMat?'#fff':'var(--text)'};cursor:pointer;font-size:12px">전체</button>` +
+    mats.map(m=>`<button onclick="optFilterMat='${m}';renderOptMoves()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:12px">${m}</button>`).join('');
+
+  renderOptMoves();
+}
+
+function renderOptMoves(){
+  const container = document.getElementById('optMoves');
+  const filtered = optFilterMat ? optMoves.filter(m=>m.material===optFilterMat) : optMoves;
+  document.getElementById('optMoveCount').textContent = `(${filtered.length}건)`;
+
+  const matColors = {CN10:'#facc15',CN20:'#374151',RS40:'#0d9488',RS20:'#6b7280',CM20:'#d1d5db'};
+
+  container.innerHTML = filtered.map((m,i)=>`
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px">
+      <div style="min-width:28px;height:28px;border-radius:50%;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">#${m.rank}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${m.item}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${matColors[m.material]||'#999'};margin-right:3px"></span>${m.material} · 총 ${m.total.toLocaleString()}건
+        </div>
+      </div>
+      <div style="text-align:center;font-size:12px">
+        <div style="background:var(--surface2);border-radius:6px;padding:4px 8px;font-family:'IBM Plex Mono';font-weight:600">${m.from.section}${m.from.floor}-${m.from.order}</div>
+        <div style="color:var(--muted);font-size:16px;margin:2px 0">→</div>
+        <div style="background:#6366f1;color:#fff;border-radius:6px;padding:4px 8px;font-family:'IBM Plex Mono';font-weight:600">${m.to.section}${m.to.floor}-${m.to.order}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function applyOptimization(){
+  if(!optMoves.length){ showToast('이동할 항목이 없습니다'); return; }
+  if(!confirm('시뮬레이션 적용: '+optMoves.length+'건의 이동을 로컬에 반영합니다.\\n(구글시트에는 반영되지 않습니다)')) return;
+
+  optMoves.forEach(m=>{
+    // from 슬롯 찾기
+    const fromIdx = data.findIndex(d=>d.section===m.from.section && d.floor===m.from.floor && d.order===m.from.order && d.item===m.item);
+    const toIdx = data.findIndex(d=>d.section===m.to.section && d.floor===m.to.floor && d.order===m.to.order);
+    if(fromIdx<0 || toIdx<0) return;
+
+    // 데이터 이동
+    data[toIdx].item = data[fromIdx].item;
+    data[toIdx].material = data[fromIdx].material;
+    data[toIdx].qty = data[fromIdx].qty;
+    data[toIdx].memo = data[fromIdx].memo;
+    data[toIdx].inDate = data[fromIdx].inDate;
+
+    // from 슬롯 비우기
+    data[fromIdx].item = '';
+    data[fromIdx].material = '';
+    data[fromIdx].qty = '';
+    data[fromIdx].memo = '';
+    data[fromIdx].inDate = '';
+  });
+
+  try{ localStorage.setItem('wh_cache_v1', JSON.stringify(data)); }catch(e){}
+  renderAll();
+  closeOptimizer();
+  showToast('✅ 시뮬레이션 적용 완료 ('+optMoves.length+'건 이동) — 시트 미반영');
+}
+
 </script>
 </body>
 </html>
