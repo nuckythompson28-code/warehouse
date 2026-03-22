@@ -128,7 +128,7 @@ async function loadShipmentData(){
       return;
     }
     const res = await fetch('shipment_data.json');
-    if(!res.ok) throw new Error('Network error');
+    if(!res.ok) return;
     const sd = await res.json();
     shipmentData = sd;
     localStorage.setItem('shipmentDataCache', JSON.stringify(sd));
