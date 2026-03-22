@@ -125,19 +125,8 @@ async function loadShipmentData(){
       shipmentData = JSON.parse(cached);
       buildQtyTop100();
       renderAll();
-      return;
     }
-    const res = await fetch('shipment_data.json');
-    if(!res.ok) return;
-    const sd = await res.json();
-    shipmentData = sd;
-    localStorage.setItem('shipmentDataCache', JSON.stringify(sd));
-    localStorage.setItem('shipmentDataTime', Date.now().toString());
-    buildQtyTop100();
-    renderAll();
-  }catch(e){
-    console.error('Error loading shipment data:', e);
-  }
+  }catch(e){}
 }
 
 // Apps Script 웹 앱 URL (배포 후 입력)
