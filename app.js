@@ -125,55 +125,53 @@ async function loadShipmentData(){
       shipmentData = JSON.parse(cached);
       buildQtyTop100();
       renderAll();
+      return;
     }
-  }catch(e){}
+    const res = await fetch('shipment_data.json');
+    if(!res.ok) throw new Error('Network error');
+    const sd = await res.json();
+    shipmentData = sd;
+    localStorage.setItem('shipmentDataCache', JSON.stringify(sd));
+    localStorage.setItem('shipmentDataTime', Date.now().toString());
+    buildQtyTop100();
+    renderAll();
+  }catch(e){
+    console.error('Error loading shipment data:', e);
+  }
 }
-
-const SHEET_ID = '1MsmVKtz5NTxIIoj3efXYPLEhL3GaONW5LAlRNjKk7s0';
 
 async function loadFromSheet(){
   try{
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
+    const url = 'https://docs.google.com/spreadsheets/d/1MsmVKtz5NTxIIoj3efXYPLEhL3GaONW5LAlRNjKk7s0/gviz/tq?tqx=out:csv&gid=0';
     const res = await fetch(url);
     if(!res.ok) return;
     const csv = await res.text();
     const lines = csv.trim().split('\n');
     if(lines.length <= 1) return;
-
-    // 헤더 파싱 (따옴표 제거)
     const header = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toLowerCase());
-
-    for(let i = 1; i < lines.length; i++){
-      // CSV 파싱 (따옴표 안의 콤마 처리)
+    for(let i=1; i<lines.length; i++){
       const values = [];
-      let current = '', inQuotes = false;
+      let cur = '', inQ = false;
       for(const ch of lines[i]){
-        if(ch === '"'){ inQuotes = !inQuotes; }
-        else if(ch === ',' && !inQuotes){ values.push(current.trim()); current = ''; }
-        else { current += ch; }
+        if(ch === '"'){ inQ = !inQ; }
+        else if(ch === ',' && !inQ){ values.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
       }
-      values.push(current.trim());
-
+      values.push(cur.trim());
       const obj = {};
-      header.forEach((h, j) => obj[h] = values[j] || '');
-
-      const section = obj.section || '';
-      const floor = Number(obj.floor) || 0;
-      const order = Number(obj.order) || 0;
+      header.forEach((h,j) => obj[h] = values[j]||'');
+      const section = obj.section||'';
+      const floor = Number(obj.floor)||0;
+      const order = Number(obj.order)||0;
       if(!section || !floor || !order) continue;
-
-      const idx = data.findIndex(d => d.section === section && d.floor === floor && d.order === order);
-      if(idx < 0) continue;
-
-      data[idx].item = obj.item || '';
-      data[idx].material = obj.material || '';
-      data[idx].qty = obj.qty || '';
-      data[idx].inDate = obj.indate || '';
-      data[idx].memo = obj.memo || '';
-      data[idx].status = obj.status || '';
-      data[idx].type = obj.type || data[idx].type || '';
+      const idx = data.findIndex(d => d.section===section && d.floor===floor && d.order===order);
+      if(idx<0) continue;
+      if(obj.item) data[idx].item = obj.item;
+      if(obj.material) data[idx].material = obj.material;
+      if(obj.qty) data[idx].qty = obj.qty;
+      if(obj.indate) data[idx].inDate = obj.indate;
+      if(obj.memo) data[idx].memo = obj.memo;
     }
-
     localStorage.setItem('warehouseDataCache', JSON.stringify(data));
     localStorage.setItem('warehouseDataTime', Date.now().toString());
   }catch(e){
