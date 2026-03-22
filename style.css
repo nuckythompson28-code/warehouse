@@ -1,0 +1,836 @@
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+
+:root{
+  --bg:#f5f3f0;--surface:#ffffff;--surface2:#f0ede8;--border:#e5e0d8;
+  --accent:#d97706;--active:#059669;--hold:#d97706;--text:#1c1917;--muted:#78716c;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --반박스:#6366f1;--풀박스:#9333ea;--흰색:#64748b;--노란색:#d97706;--초소형:#0891b2;--서랍:#db2777;
+  --CN10:#facc15;--CN20:#374151;--RS40:#0d9488;--RS20:#6b7280;--CM20:#d1d5db;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;padding-bottom:80px;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+.slot{image-rendering:crisp-edges;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+
+/* ── 상단 헤더 ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg);border-bottom:1px solid var(--border);
+  padding:12px 16px 10px;box-shadow:var(--shadow);
+}
+.topbar-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.logo{font-family:'IBM Plex Mono';font-size:16px;font-weight:700;color:var(--accent)}
+.topbar-actions{display:flex;gap:8px}
+.icon-btn{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:7px 10px;font-size:13px;cursor:pointer;color:var(--text);
+  display:flex;align-items:center;gap:4px;box-shadow:var(--shadow);
+}
+.search-bar{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  display:flex;align-items:center;gap:8px;padding:9px 12px;box-shadow:var(--shadow);
+}
+.search-bar input{
+  flex:1;background:none;border:none;color:var(--text);font-size:14px;outline:none;
+  font-family:'IBM Plex Sans KR';
+}
+.search-bar input::placeholder{color:var(--muted)}
+.search-clear{color:var(--muted);font-size:18px;cursor:pointer;padding:0 2px;display:none}
+
+/* ── 바텀 탭바 ── */
+.tabbar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:var(--bg);border-top:1px solid var(--border);backdrop-filter:blur(12px);
+  display:flex;padding-bottom:var(--safe-bottom);
+}
+.tabbar-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:10px 0 8px;cursor:pointer;gap:3px;
+  font-size:10px;color:var(--muted);font-family:'IBM Plex Mono';
+  transition:color .12s;
+}
+.tabbar-item.on{color:var(--accent);font-weight:600}
+.tabbar-icon{font-size:20px;line-height:1}
+
+/* ── 패널 ── */
+.panel{display:none;padding:12px 16px}
+.panel.on{display:block}
+
+/* ── 통계 칩 ── */
+.stats-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.stats-row::-webkit-scrollbar{display:none}
+.stat-chip{
+  flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:6px 12px;box-shadow:var(--shadow);font-size:12px;color:var(--muted);
+  display:flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.stat-chip b{font-family:'IBM Plex Mono';color:var(--text)}
+.sdot{width:7px;height:7px;border-radius:50%}
+
+/* ── 필터 칩 ── */
+.filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.fchip{
+  flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:7px 14px;font-size:12px;color:var(--muted);cursor:pointer;box-shadow:var(--shadow);
+}
+.fchip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(217,119,6,.3)}
+
+/* ── 조감도 그리드 ── */
+.overview-grid{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.aisle-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-md)}
+.aisle-label{
+  background:var(--surface2);padding:8px 14px;
+  font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;
+}
+.aisle-label::before{content:"";flex:1;height:1px;background:var(--border)}
+.aisle-label::after{content:"";flex:1;height:1px;background:var(--border)}
+.aisle-sections{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.ov-sec{
+  background:var(--surface);padding:12px 14px;cursor:pointer;
+  transition:all .15s;
+}
+.ov-sec:hover{background:var(--surface2)}.ov-sec:active{background:var(--surface2)}
+.ov-sec-name{font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px}
+.ov-sec.mirror .ov-sec-name{text-align:right}
+.ov-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px}
+.ov-sec.mirror .ov-chips{justify-content:flex-end}
+.ov-chip{font-size:10px;font-family:'IBM Plex Mono';padding:2px 7px;border-radius:10px}
+.ov-chip.in{background:rgba(16,185,129,.15);color:#059669;font-weight:700}
+.ov-chip.empty{background:rgba(148,163,184,.15);color:#64748b}
+.ov-chip.unused{background:rgba(0,0,0,.06);color:#94a3b8;text-decoration:line-through}
+.ov-floor-bars{display:flex;flex-direction:column;gap:3px}
+.ov-fbar{display:flex;align-items:center;gap:6px}
+.ov-fbar-lbl{font-size:9px;color:var(--muted);font-family:'IBM Plex Mono';width:16px;text-align:right;flex-shrink:0}
+.ov-fbar-track{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;display:flex}
+.ov-fbar-active{background:#34d399;height:100%}
+.ov-fbar-hold{background:#fbbf24;height:100%}
+.ov-fbar-none{background:#1e2940;height:100%}
+.ov-fbar-cnt{font-size:9px;color:var(--muted);font-family:'IBM Plex Mono';width:22px}
+
+/* ── 섹션 목록 ── */
+.section-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.sec-row{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;transition:all .15s;box-shadow:var(--shadow);
+}
+.sec-row:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-1px)}.sec-row:active{border-color:var(--accent)}
+.sec-row-left{display:flex;align-items:center;gap:12px}
+.sec-badge{
+  font-family:'IBM Plex Mono';font-size:18px;font-weight:700;color:var(--accent);
+  background:rgba(56,189,248,.1);border-radius:10px;width:42px;height:42px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sec-info{display:flex;flex-direction:column;gap:3px}
+.sec-name{font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--text)}
+.sec-sub{font-size:11px;color:var(--muted);display:flex;gap:8px}
+.sec-chevron{color:var(--muted);font-size:18px}
+
+/* ── 섹션 상세 (드릴다운) ── */
+.detail-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.back-btn{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:8px 12px;font-size:14px;cursor:pointer;color:var(--text);flex-shrink:0;box-shadow:var(--shadow);
+}
+.detail-title{font-family:'IBM Plex Mono';font-size:18px;font-weight:700;color:var(--accent)}
+
+.floor-block{margin-bottom:16px}
+.floor-hd{
+  font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.floor-hd::after{content:"";flex:1;height:1px;background:var(--border)}
+
+
+/* ── 전체뷰 ── */
+#panel-full{overflow:auto;position:relative;height:calc(100vh - 120px);-webkit-overflow-scrolling:touch;}
+.full-warehouse{padding:0;min-width:unset;height:100%;}
+
+/* 그룹 지도 개요 - 통합 레이아웃 */
+.wh-map{display:flex;justify-content:center;align-items:stretch;height:100%;padding:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.wh-map-grid{
+  display:grid;
+  grid-template-columns:repeat(12,minmax(28px,1fr));
+  grid-template-rows:repeat(16,minmax(28px,1fr));
+  gap:2px;
+  width:100%;height:100%;min-width:340px;
+}
+.wh-map-block{
+  border-radius:6px;font-size:clamp(11px,3vw,18px);font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono';cursor:pointer;transition:all .15s;
+  min-height:0;border:1px solid rgba(0,0,0,.08);
+}
+.wh-map-block:hover{filter:brightness(.9);box-shadow:0 2px 10px rgba(0,0,0,.2);z-index:5}
+.wh-map-block:active{transform:scale(.97)}
+.wh-map-block.sec-ai{background:#fbbf24;color:#78350f}
+.wh-map-block.sec-jp{background:#6ee7b7;color:#064e3b}
+.wh-map-block.sec-qu{background:#a5b4fc;color:#312e81}
+.wh-map-block.sec-extra{background:#d1d5db;color:#1f2937}
+.wh-group-stats{display:flex;gap:12px;flex-wrap:wrap}
+.wh-group-stat{
+  font-family:'IBM Plex Mono';font-size:12px;font-weight:600;
+  padding:4px 10px;border-radius:8px;
+}
+.wh-group-bar{
+  margin-top:12px;height:6px;border-radius:3px;background:#e5e0d8;overflow:hidden;
+  display:flex;
+}
+.wh-group-bar span{height:100%;transition:width .3s}
+
+/* 그룹 상세뷰 */
+.wh-detail{padding:12px;overflow-x:auto;}
+.wh-detail-back{
+  font-family:'IBM Plex Mono';font-size:13px;font-weight:700;
+  color:var(--accent);cursor:pointer;padding:8px 14px;
+  border:1px solid var(--border);border-radius:10px;background:var(--surface);
+  margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;
+  box-shadow:var(--shadow);
+}
+.wh-detail-back:hover{background:var(--surface2)}
+.wh-detail-sections{display:flex;flex-direction:column;gap:6px;}
+.wh-detail-aisle{
+  font-family:'IBM Plex Mono';font-size:10px;font-weight:700;color:var(--muted);
+  display:flex;align-items:center;gap:8px;padding:4px 0;
+}
+.wh-detail-aisle::before,.wh-detail-aisle::after{content:"";flex:1;height:1px;background:var(--border)}
+.wh-placeholder{
+  background:#fff;border:2px dashed #d5cfc6;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  min-height:40px;padding:8px 4px;
+  font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:#b0a89e;
+}
+.full-pair{display:flex;flex-direction:column;gap:3px}
+.full-section{display:flex;flex-direction:column;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 8px;box-shadow:var(--shadow)}
+.extra-col .full-section{gap:2px;padding:4px 6px}
+.full-sec-hd{
+  font-family:'IBM Plex Mono';font-size:11px;font-weight:700;
+  color:var(--accent);padding:0 0 6px;display:flex;align-items:center;gap:6px;
+  border-bottom:1px solid var(--border);margin-bottom:4px;
+}
+.full-floor-row{display:flex;align-items:flex-start;gap:3px}
+.full-floor-lbl{
+  font-family:'IBM Plex Mono';font-size:9px;color:var(--muted);
+  width:18px;flex-shrink:0;padding-top:14px;text-align:right;
+}
+.full-slots{display:flex;gap:3px;align-items:flex-start;flex-wrap:nowrap}
+.full-slots.mirrored{flex-direction:row-reverse}
+
+/* ── 슬롯 렌더링 ── */
+.slots-row{display:flex;flex-wrap:nowrap;gap:2px;align-items:center;overflow-x:auto;padding-bottom:2px}
+.slots-row.mirrored{flex-direction:row-reverse}
+.slots-row::-webkit-scrollbar{display:none}
+.zgroup{display:inline-grid;grid-template-columns:48px 48px;grid-template-rows:24px 24px;gap:2px;flex-shrink:0;align-self:flex-start;border-radius:6px;overflow:hidden;height:50px;}
+.zgroup.drawers{grid-template-columns:48px 48px;grid-template-rows:24px 24px;gap:2px;height:50px}
+
+.slot{
+  width:48px;height:48px;border-radius:6px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
+  font-family:'IBM Plex Mono';font-size:9px;font-weight:700;cursor:pointer;position:relative;
+  border:1.5px solid transparent;flex-shrink:0;transition:all .08s;gap:1px;padding:2px;
+}
+.slot:hover{z-index:40;box-shadow:0 3px 10px rgba(0,0,0,.18);outline:2px solid var(--accent)}
+.slot.dim{opacity:.1}
+.slot.no-qty{opacity:.35}
+.slot.UNUSED{opacity:.2;filter:grayscale(.7)}
+.slot.EMPTY::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#e2e8f0;border:1px solid #94a3b8}
+.qty-badge{position:absolute;top:1px;right:1px;z-index:10;pointer-events:none;
+  background:#dc2626;color:#fff;font-size:7px;font-weight:800;line-height:1;
+  padding:2px 3px;border-radius:3px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+
+/* 기본: 빈 슬롯 연회색 */
+.slot{background:#e8e4de;border-color:#d5cfc6;color:#78716c}
+.slot.풀박스{width:calc(48px * 2 + 2px);height:48px}
+.slot.흰색,.slot.노란색,.slot.서랍{width:48px;height:100%}
+.slot.초소형{width:36px;height:48px}
+
+/* 소재 있으면 소재색 */
+.slot.mat-CN10{background:#facc15!important;border-color:#fcd34d!important;color:#78350f!important}
+.slot.mat-CN20{background:#374151!important;border-color:#1f2937!important;color:#fff!important}
+.slot.mat-RS40{background:#7dd3e8!important;border-color:#5bb8cc!important;color:#1a3a4a!important}
+.slot.mat-RS20{background:#9ca3af!important;border-color:#6b7280!important;color:#fff!important}
+.slot.mat-CM20{background:#d1d5db!important;border-color:#b0b5bc!important;color:#374151!important}
+
+.slot.has-item:not([class*="mat-"]){background:#94a3b8!important;border-color:#64748b!important;color:#fff!important}
+
+/* 장기미출고 (stale) */
+.slot.stale{outline:2px solid #ef4444;outline-offset:-1px}
+.stale-icon{position:absolute;top:1px;left:1px;font-size:7px;line-height:1;z-index:10;pointer-events:none;filter:drop-shadow(0 0 1px rgba(0,0,0,.3))}
+.star-badge{position:absolute;bottom:1px;right:1px;z-index:10;pointer-events:none;
+  background:#16a34a;color:#fff;font-size:7px;font-weight:800;line-height:1;
+  padding:2px 3px;border-radius:3px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.popup-card .card-shipment{font-size:11px;color:var(--muted);margin-top:4px;padding-top:4px;border-top:1px dashed var(--border)}
+.card-history{margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.card-history-title{font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px}
+.card-history-tbl{width:100%;border-collapse:collapse;font-size:10px}
+.card-history-tbl th{background:var(--surface2);padding:3px 6px;text-align:left;font-weight:600;color:var(--muted)}
+.card-history-tbl td{padding:3px 6px;border-bottom:1px solid var(--border)}
+.card-history-tbl tr.hist-out td{color:#dc2626}
+.card-history-tbl tr.hist-in td{color:#059669}
+
+.slot-id{font-size:11px;line-height:1;font-weight:700;letter-spacing:.2px}
+.slot-item{display:none}
+.slot-material{font-size:9px;font-weight:800;opacity:.9;line-height:1}
+.slot-loc{display:none}
+.slot-order{display:none}
+
+/* 툴팁 - JS로 제어 */
+#slotTooltip{
+  display:none;position:fixed;
+  background:#1c1917;color:#fff;font-size:11px;padding:8px 12px;border-radius:8px;
+  white-space:nowrap;z-index:9999;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.3);text-align:left;line-height:1.6;
+  font-family:'IBM Plex Mono';
+}
+.slot-tip{display:none!important}
+
+/* ── 소재 범례 ── */
+.material-legend{
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:10px 14px;box-shadow:var(--shadow);
+}
+.mat-chip{
+  display:flex;align-items:center;gap:5px;
+  font-family:'IBM Plex Mono';font-size:11px;color:var(--text);
+}
+.mat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* has-item: 컴팩트에서는 기본 크기 유지 */
+
+/* ── 슬롯 상세 바텀시트 ── */
+.sheet-backdrop{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;
+}
+.sheet-backdrop.on{display:block}
+.sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:201;
+  background:var(--bg);border-radius:20px 20px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.12);
+  padding:0 0 calc(20px + var(--safe-bottom));
+  transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
+  max-height:90vh;overflow-y:auto;
+}
+.sheet.on{transform:translateY(0)}
+.sheet-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 16px}
+.sheet-title{font-family:'IBM Plex Mono';font-size:15px;font-weight:700;color:var(--accent);padding:0 20px;margin-bottom:14px}
+.sheet-field{padding:11px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sheet-label{font-size:12px;color:var(--muted);flex-shrink:0;width:60px}
+.sheet-value{font-size:13px;color:var(--text);text-align:right;flex:1}
+.sheet-input,.sheet-select{
+  flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  border-radius:10px;padding:8px 10px;font-size:13px;outline:none;
+  font-family:'Pretendard','IBM Plex Sans KR',sans-serif;text-align:right;
+}
+.sheet-input:focus,.sheet-select:focus{border-color:var(--accent)}
+.sheet-actions{display:flex;gap:10px;padding:16px 20px 4px}
+.sheet-btn{
+  flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:700;
+  border:none;cursor:pointer;font-family:'IBM Plex Sans KR';
+}
+.sheet-btn.cancel{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.sheet-btn.save{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(217,119,6,.3)}
+.sheet-btn.queue{background:#6366f1;color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+
+/* ── 카드 팝업 (슬롯 멀티아이템) ── */
+.popup-backdrop{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;
+  backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+}
+.popup-backdrop.on{display:block}
+.slot-popup{
+  display:none;position:fixed;z-index:201;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  background:var(--bg);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.18);
+  width:92vw;max-width:420px;max-height:85vh;overflow-y:auto;
+  padding:20px 16px calc(16px + var(--safe-bottom));
+}
+.slot-popup.on{display:block}
+.popup-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;padding:0 4px;
+}
+.popup-title{font-family:'IBM Plex Mono';font-size:16px;font-weight:700;color:var(--accent)}
+.popup-subtitle{font-size:12px;color:var(--muted);margin-left:6px;font-weight:400}
+.popup-close{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:4px 10px;cursor:pointer;font-size:13px;color:var(--muted);
+}
+.popup-cards{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;
+}
+.popup-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:12px 10px 10px;position:relative;cursor:pointer;
+  transition:box-shadow .15s,border-color .15s;
+}
+.popup-card:hover{border-color:var(--accent);box-shadow:var(--shadow-md)}
+.popup-card.editing{
+  grid-column:1/-1;border-color:var(--accent);box-shadow:var(--shadow-md);cursor:default;
+}
+.popup-card .card-mat{
+  font-family:'IBM Plex Mono';font-size:13px;font-weight:700;
+  margin-bottom:4px;
+}
+.popup-card .card-item{font-size:12px;color:var(--text);margin-bottom:2px;word-break:break-all}
+.popup-card .card-qty{font-size:11px;color:var(--muted)}
+.popup-card .card-delete{
+  position:absolute;top:4px;right:6px;
+  background:none;border:none;font-size:14px;cursor:pointer;
+  color:var(--muted);opacity:.5;transition:opacity .15s;padding:2px;line-height:1;
+}
+.popup-card .card-delete:hover{opacity:1;color:#dc2626}
+.popup-card .card-badge{
+  display:inline-block;font-size:9px;padding:1px 5px;border-radius:6px;
+  font-weight:700;margin-bottom:4px;
+}
+/* card edit form inside popup-card.editing */
+.card-edit-fields{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.card-edit-fields label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.card-edit-fields input,.card-edit-fields select{
+  flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:6px 8px;font-size:12px;outline:none;
+  font-family:'Pretendard',sans-serif;
+}
+.card-edit-fields input:focus,.card-edit-fields select:focus{border-color:var(--accent)}
+.card-edit-actions{display:flex;gap:6px;margin-top:8px}
+.card-edit-actions button{
+  flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:700;
+  border:none;cursor:pointer;font-family:'Pretendard',sans-serif;
+}
+.card-edit-actions .card-save-btn{background:var(--accent);color:#fff}
+.card-edit-actions .card-cancel-btn{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.card-edit-actions .card-queue-btn{background:#6366f1;color:#fff}
+.popup-footer{display:flex;gap:10px;padding-top:6px}
+.popup-footer button{
+  flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:700;
+  border:none;cursor:pointer;font-family:'Pretendard',sans-serif;
+}
+.popup-add-btn{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(217,119,6,.3)}
+.popup-close-btn{background:var(--surface2);color:var(--muted);border:1px solid var(--border) !important}
+/* 슬롯 멀티아이템 배지 */
+.slot-badge{
+  position:absolute;top:-4px;right:-4px;
+  background:#dc2626;color:#fff;font-size:8px;font-weight:700;
+  min-width:14px;height:14px;line-height:14px;text-align:center;
+  border-radius:7px;padding:0 3px;z-index:2;
+}
+
+/* ── 인쇄 대기열 ── */
+.pq-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.pq-toolbar-title{font-family:'IBM Plex Mono';font-size:14px;font-weight:700;color:var(--accent)}
+.pq-count{font-size:12px;color:var(--muted)}
+.pq-btn{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:7px 14px;font-size:12px;cursor:pointer;color:var(--text);font-family:inherit;box-shadow:var(--shadow);
+}
+.pq-btn.print{background:var(--accent);color:#fff;border:none;font-weight:700;box-shadow:0 2px 8px rgba(217,119,6,.3)}
+.pq-btn.clear{color:#dc2626;border-color:#fecaca}
+.pq-empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+.pq-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start}
+.pq-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;width:calc(50% - 4px);box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:4px;position:relative;
+}
+.pq-card-loc{font-family:'IBM Plex Mono';font-size:15px;font-weight:800;color:var(--accent)}
+.pq-card-item{font-size:13px;font-weight:700;color:var(--text);word-break:break-all}
+.pq-card-mat{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;display:inline-block;color:#fff;width:fit-content}
+.pq-card-del{
+  position:absolute;top:6px;right:8px;background:none;border:none;
+  font-size:16px;cursor:pointer;color:var(--muted);padding:2px 6px;
+}
+.pq-card-del:hover{color:#dc2626}
+/* 대기열 인쇄 라벨 (화면+인쇄 공통) */
+.pq-print-area{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.pq-print-area .pq-label{
+  display:flex;align-items:stretch;
+  border:1.5px solid #555;border-radius:3px;
+  margin:1mm;page-break-inside:avoid;
+  width:140mm;min-width:140mm;max-width:140mm;height:28mm;overflow:hidden;background:#fff;
+  -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
+}
+/* 1: 위치 정사각형 */
+.pq-print-area .pq-label-loc{
+  width:28mm;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:#f5f3f0;border-right:1px solid #ddd;
+  font-family:Consolas,'Courier New',monospace;font-size:16pt;font-weight:900;
+  color:#111;letter-spacing:0.5px;
+}
+/* 2: QR 정사각형 */
+.pq-print-area .pq-label-qr{
+  width:28mm;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  padding:2mm;border-right:1px solid #ddd;background:#fff;
+}
+.pq-print-area .pq-label-qr img,.pq-print-area .pq-label-qr canvas{width:22mm!important;height:22mm!important}
+/* 3: 치수+소재 (78mm 고정 - 888.88*888.88*888.88 기준) */
+.pq-print-area .pq-label-info{
+  width:78mm;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;
+  padding:2mm 4mm;
+}
+.pq-print-area .pq-label-item{
+  font-family:Consolas,'Courier New',monospace;font-size:16pt;font-weight:900;
+  color:#111;white-space:nowrap;line-height:1.2;
+}
+.pq-print-area .pq-label-mat{
+  font-family:Consolas,monospace;font-size:13pt;font-weight:800;
+  color:#555;margin-top:1.5mm;
+}
+/* 오른쪽 끝: 소재 색상 바 */
+.pq-print-area .pq-label-cb{
+  width:6mm;flex-shrink:0;
+  -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
+}
+
+/* ── 인쇄 탭 모드전환 ── */
+.pq-tabs{display:flex;gap:4px;margin-bottom:12px}
+.pq-tab{
+  flex:1;padding:10px;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;
+  font-family:inherit;color:var(--muted);
+}
+.pq-tab.on{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 8px rgba(217,119,6,.3)}
+.pq-select{
+  font-family:inherit;font-size:12px;padding:7px 12px;
+  border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;color:var(--text);
+}
+.pq-so{display:flex;gap:3px}
+.pq-sz{font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:var(--surface)}
+.pq-sz input{display:none}
+.pq-sz input:checked+span{color:var(--accent);font-weight:700}
+
+/* ── 전체 라벨 프리뷰 (C안: 2단 분할) ── */
+.lbl-preview{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding-top:8px}
+.lbl-card{
+  border:1.5px solid #ccc;border-radius:5px;
+  display:flex;align-items:stretch;
+  overflow:hidden;background:#fff;page-break-inside:avoid;
+}
+.lbl-card.lg{width:100mm;height:38mm}
+.lbl-card.md{width:75mm;height:28mm}
+.lbl-card.sm{width:55mm;height:22mm}
+
+/* 좌측: 소재색 배경 + 큰 위치 */
+.lbl-left{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex-shrink:0;color:#fff;
+}
+.lbl-card.lg .lbl-left{width:40mm;padding:2mm}
+.lbl-card.md .lbl-left{width:30mm;padding:1.5mm}
+.lbl-card.sm .lbl-left{width:22mm;padding:1mm}
+.lbl-loc{font-family:Consolas,'Courier New',monospace;font-weight:900;line-height:1;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.3)}
+.lbl-card.lg .lbl-loc{font-size:24pt}
+.lbl-card.md .lbl-loc{font-size:17pt}
+.lbl-card.sm .lbl-loc{font-size:12pt}
+.lbl-matname{font-family:Consolas,monospace;font-weight:700;opacity:.85;line-height:1;margin-top:1mm}
+.lbl-card.lg .lbl-matname{font-size:10pt}
+.lbl-card.md .lbl-matname{font-size:8pt}
+.lbl-card.sm .lbl-matname{font-size:6.5pt}
+
+/* 우측: 흰 배경 + 치수 + QR */
+.lbl-right{
+  flex:1;display:flex;align-items:center;gap:2mm;min-width:0;
+  border-left:1.5px solid #e0e0e0;
+}
+.lbl-card.lg .lbl-right{padding:2mm 3mm}
+.lbl-card.md .lbl-right{padding:1.5mm 2.5mm}
+.lbl-card.sm .lbl-right{padding:1mm 1.5mm}
+.lbl-info{flex:1;display:flex;flex-direction:column;justify-content:center;gap:1mm;min-width:0}
+.lbl-item{font-family:Consolas,monospace;font-weight:800;color:#111;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbl-card.lg .lbl-item{font-size:14pt}
+.lbl-card.md .lbl-item{font-size:10pt}
+.lbl-card.sm .lbl-item{font-size:7.5pt}
+.lbl-type{font-family:Consolas,monospace;color:#888;line-height:1}
+.lbl-card.lg .lbl-type{font-size:8pt}
+.lbl-card.md .lbl-type{font-size:6.5pt}
+.lbl-card.sm .lbl-type{font-size:5.5pt}
+.lbl-qr{flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.lbl-card.lg .lbl-qr{width:26mm;height:26mm}
+.lbl-card.md .lbl-qr{width:18mm;height:18mm}
+.lbl-card.sm .lbl-qr{width:14mm;height:14mm}
+
+@media print{
+  .lbl-preview{padding:0;gap:1.5mm;justify-content:flex-start}
+  .lbl-card{border:1px solid #999}
+}
+
+/* ── 공지 토스트 ── */
+.toast{
+  position:fixed;bottom:calc(70px + var(--safe-bottom));left:50%;transform:translateX(-50%);
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-md);
+  padding:10px 18px;font-size:13px;color:var(--text);font-family:'IBM Plex Mono';
+  z-index:300;white-space:nowrap;display:none;
+  animation:toastout 2s forwards;
+}
+@keyframes toastout{0%{opacity:1;transform:translateX(-50%) translateY(0)}
+  70%{opacity:1;transform:translateX(-50%) translateY(0)}
+  100%{opacity:0;transform:translateX(-50%) translateY(8px)}}
+
+/* ── 검색 결과 패널 ── */
+.search-result-panel{
+  position:fixed;left:0;right:0;bottom:64px;
+  background:var(--bg);overflow-y:auto;
+  z-index:95;
+  display:none;
+  border-top:1px solid var(--border);
+}
+.search-result-panel.on{display:block}
+.search-result-header{
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  padding:10px 16px 8px;box-shadow:0 1px 4px rgba(0,0,0,.06);
+  font-family:'IBM Plex Mono';font-size:12px;color:var(--muted);
+}
+.result-card{
+  margin:8px 16px 0;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:var(--shadow);
+}
+.result-card:active{border-color:var(--accent)}
+.result-loc{display:flex;flex-direction:column;gap:3px;flex:1;}
+.result-path{font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:var(--accent)}
+.result-item{font-size:13px;color:var(--text)}
+.result-meta{font-size:11px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.result-status{
+  font-size:11px;font-family:'IBM Plex Mono';font-weight:700;
+  padding:4px 9px;border-radius:8px;flex-shrink:0;
+}
+.result-status.IN{background:rgba(16,185,129,.15);color:#059669;font-weight:700}
+.result-status.EMPTY{background:rgba(148,163,184,.15);color:#64748b}
+.result-status.UNUSED{background:rgba(0,0,0,.06);color:#94a3b8}
+.no-results{
+  text-align:center;padding:48px 20px;color:var(--muted);font-size:14px;
+}
+.no-results-icon{font-size:32px;margin-bottom:12px}
+
+/* ── 빈슬롯 추천 모드 ── */
+.slot.recommend{
+  animation:recommend-pulse 1.2s ease-in-out infinite;
+  z-index:10;position:relative;
+}
+@keyframes recommend-pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.6),var(--shadow)}
+  50%{box-shadow:0 0 0 6px rgba(16,185,129,.0),var(--shadow)}
+}
+.slot.recommend::before{
+  content:"★";position:absolute;top:-6px;left:50%;transform:translateX(-50%);
+  font-size:11px;color:#10b981;background:#fff;border-radius:50%;
+  width:16px;height:16px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 4px rgba(0,0,0,.15);line-height:16px;text-align:center;
+}
+.slot.dim-recommend{opacity:.18;filter:grayscale(.5)}
+
+/* ── 추천 패널 ── */
+.recommend-panel{
+  position:fixed;left:0;right:0;bottom:64px;
+  background:var(--bg);border-top:2px solid #10b981;
+  z-index:95;display:none;overflow-y:auto;
+}
+.recommend-panel.on{display:block}
+.recommend-header{
+  padding:14px 20px 10px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.recommend-title{font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:#065f46}
+.recommend-close{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:4px 10px;font-size:12px;cursor:pointer;color:var(--muted);
+}
+.recommend-chips{
+  display:flex;gap:6px;flex-wrap:wrap;padding:0 20px 12px;
+}
+.rec-chip{
+  background:rgba(16,185,129,.1);border:1.5px solid rgba(16,185,129,.3);
+  border-radius:20px;padding:5px 12px;font-size:11px;font-family:'IBM Plex Mono';
+  color:#065f46;cursor:pointer;transition:all .15s;
+}
+.rec-chip:hover,.rec-chip.on{background:#10b981;border-color:#10b981;color:#fff}
+.rec-list{padding:0 20px 16px;display:flex;flex-direction:column;gap:6px}
+.rec-card{
+  background:var(--surface);border:1.5px solid rgba(16,185,129,.4);
+  border-radius:12px;padding:12px 16px;cursor:pointer;
+  display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);
+  transition:all .15s;
+}
+.rec-card:hover{border-color:#10b981;transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.rec-rank{
+  font-family:'IBM Plex Mono';font-size:18px;font-weight:800;
+  color:#10b981;width:28px;flex-shrink:0;text-align:center;
+}
+.rec-info{flex:1}
+.rec-loc{font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:var(--text)}
+.rec-reason{font-size:11px;color:var(--muted);margin-top:2px}
+.rec-type{
+  font-size:10px;font-family:'IBM Plex Mono';padding:3px 8px;
+  border-radius:8px;background:var(--surface2);color:var(--muted);
+}
+
+/* ── 검색바 확장 - 필터 바 ── */
+.search-filter-bar{
+  display:none;gap:6px;overflow-x:auto;padding:8px 16px 0;scrollbar-width:none;
+}
+.search-filter-bar.on{display:flex}
+.search-filter-bar::-webkit-scrollbar{display:none}
+.sf-chip{
+  flex-shrink:0;background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:5px 12px;font-size:11px;font-family:'IBM Plex Mono';
+  color:var(--muted);cursor:pointer;white-space:nowrap;box-shadow:var(--shadow);
+}
+.sf-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.sf-chip.empty-only{border-color:#10b981;color:#065f46}
+.sf-chip.empty-only.on{background:#10b981;border-color:#10b981;color:#fff}
+
+/* ── 추천 트리거 버튼 ── */
+.recommend-btn{
+  background:linear-gradient(135deg,#10b981,#059669);
+  border:none;border-radius:10px;padding:7px 12px;font-size:12px;
+  cursor:pointer;color:#fff;font-family:'IBM Plex Mono';font-weight:700;
+  display:flex;align-items:center;gap:4px;box-shadow:0 2px 8px rgba(16,185,129,.3);
+  white-space:nowrap;
+}
+
+/* ── 스프레드시트 뷰 ── */
+#panel-table{overflow:auto;}
+.table-toolbar{
+  display:flex;align-items:center;gap:8px;padding:12px 16px 8px;
+  position:sticky;top:0;background:var(--bg);z-index:10;
+  border-bottom:1px solid var(--border);flex-wrap:wrap;
+}
+.table-toolbar-title{font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:var(--text);flex:1}
+.tbl-btn{
+  background:var(--surface);border:1.5px solid var(--border);border-radius:8px;
+  padding:6px 12px;font-size:12px;font-family:'IBM Plex Mono';cursor:pointer;
+  color:var(--text);display:flex;align-items:center;gap:5px;box-shadow:var(--shadow);
+  transition:all .15s;white-space:nowrap;
+}
+.tbl-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tbl-btn.pdf-btn{
+  background:linear-gradient(135deg,#ef4444,#dc2626);border-color:#dc2626;
+  color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.3);
+}
+.tbl-btn.pdf-btn:hover{background:linear-gradient(135deg,#dc2626,#b91c1c)}
+.tbl-btn.pdf-btn:disabled{opacity:.4;cursor:not-allowed}
+.tbl-selected-count{
+  font-family:'IBM Plex Mono';font-size:11px;color:#059669;font-weight:700;
+  background:rgba(16,185,129,.1);padding:4px 10px;border-radius:12px;
+  display:none;
+}
+.tbl-selected-count.on{display:block}
+
+.wh-table-wrap{overflow:auto;padding:0 8px 80px;}
+.wh-table{
+  width:100%;border-collapse:collapse;
+  font-family:'IBM Plex Mono';font-size:12px;
+  min-width:700px;
+}
+.wh-table th{
+  background:var(--surface2);color:var(--muted);
+  padding:8px 12px;text-align:left;font-size:11px;font-weight:600;
+  border-bottom:2px solid var(--border);position:sticky;top:0;
+  cursor:pointer;user-select:none;white-space:nowrap;
+}
+.wh-table th:hover{color:var(--accent)}
+.wh-table th .sort-icon{opacity:.4;margin-left:3px}
+.wh-table th.sorted .sort-icon{opacity:1;color:var(--accent)}
+.wh-table td{
+  padding:9px 12px;border-bottom:1px solid var(--border);
+  color:var(--text);vertical-align:middle;
+}
+.wh-table tr{cursor:pointer;transition:background .1s}
+.wh-table tr:hover td{background:var(--surface2)}
+.wh-table tr.selected td{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.2)}
+.wh-table tr.selected td:first-child{border-left:3px solid #10b981}
+.tbl-state{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;
+  white-space:nowrap;
+}
+.tbl-state.IN{background:rgba(16,185,129,.12);color:#065f46}
+.tbl-state.EMPTY{background:rgba(148,163,184,.12);color:#475569}
+.tbl-state.UNUSED{background:rgba(0,0,0,.06);color:#94a3b8}
+.tbl-mat{
+  font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;color:#fff;
+}
+.tbl-checkbox{
+  width:16px;height:16px;cursor:pointer;accent-color:#10b981;
+}
+
+/* ── PDF 인쇄 레이아웃 ── */
+#printArea{display:none}
+
+/* ── 모바일 최적화 ── */
+@media (max-width: 768px) {
+  .full-warehouse { padding: 8px; min-width: unset; }
+  #panel-full { overflow: hidden; }
+  #panel-full.detail-active { overflow: auto!important; }
+  #panel-full.detail-active #mapViewport { overflow: auto!important; }
+  #panel-full.detail-active #mapCanvas { transform: none!important; width: 100%!important; }
+
+  .slot { width: 80px!important; min-width: 80px!important; max-width: 80px!important; height: 90px!important; font-size: 9px!important; }
+  .slot.has-item { width: 80px!important; min-width: 80px!important; max-width: 80px!important; }
+  .slot.풀박스 { width: calc(80px * 2 + 2px)!important; min-width: calc(80px * 2 + 2px)!important; max-width: calc(80px * 2 + 2px)!important; }
+  .zgroup { grid-template-columns: 80px 80px!important; grid-template-rows: 44px 44px!important; height: auto!important; }
+  .zgroup .slot { height: 44px!important; }
+  .slot-id { font-size: 10px!important; }
+  .slot-item { font-size: 8px!important; -webkit-line-clamp: 2; }
+  .slot-material { font-size: 10px!important; }
+
+  .full-section { padding: 6px 8px!important; }
+  .full-sec-hd { font-size: 11px!important; }
+  .full-floor-lbl { font-size: 9px!important; min-width: 20px!important; }
+
+  .wh-detail { padding: 8px!important; overflow-x: auto!important; max-width: 100vw!important; }
+  .wh-detail-sections { max-width: 100%!important; overflow-x: visible!important; }
+  .wh-placeholder { font-size: 11px!important; }
+  .full-slots { overflow-x: auto!important; -webkit-overflow-scrolling: touch; }
+  .full-section { overflow-x: auto!important; max-width: calc(100vw - 24px)!important; }
+  .full-floor-row { overflow-x: auto!important; -webkit-overflow-scrolling: touch; max-width: 100%!important; }
+
+  .wh-table-wrap { padding: 0 4px 80px; }
+  table { font-size: 11px; }
+}
+
+@media (max-width: 480px) {
+  .slot { width: 65px!important; min-width: 65px!important; max-width: 65px!important; height: 75px!important; font-size: 8px!important; gap: 1px!important; }
+  .slot.has-item { width: 65px!important; min-width: 65px!important; max-width: 65px!important; }
+  .slot.풀박스 { width: calc(65px * 2 + 2px)!important; min-width: calc(65px * 2 + 2px)!important; max-width: calc(65px * 2 + 2px)!important; }
+  .zgroup { grid-template-columns: 65px 65px!important; grid-template-rows: 36px 36px!important; height: auto!important; }
+  .zgroup .slot { height: 36px!important; }
+  .full-section { max-width: calc(100vw - 20px)!important; }
+}
+
+@media print{
+  body > *{display:none!important}
+  #printArea, #pqPrintArea{
+    display:block!important;
+    font-family:'IBM Plex Mono',monospace;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+  }
+  .print-card{
+    width:200mm;height:30mm;
+    border-radius:4px;
+    display:flex;align-items:stretch;
+    page-break-inside:avoid;
+    margin-bottom:4mm;
+    overflow:hidden;
+    position:relative;
+  }
+  .print-card-color{display:none}
+  .print-card-body{
+    flex:1;display:flex;align-items:center;
+    padding:0 4mm;gap:6mm;
+  }
+  .print-field{display:flex;flex-direction:column;gap:1mm}
+  .print-label{font-size:12pt;color:#666;text-transform:uppercase;letter-spacing:.5pt}
+  .print-value{font-size:10pt;font-weight:700;color:#111}
+  .print-loc{font-size:28pt;font-weight:800;color:#111;min-width:20mm}
+  .print-title{font-size:9pt;margin-bottom:3mm;color:#555;display:none}
+  @page{margin:10mm;size:A4}
+}

@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#f9f7f4"/>
+<title>🏭 창고 맵</title>
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" as="style">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row1">
+    <div class="logo">🏭 창고 맵</div>
+    <div class="topbar-actions">
+      <button class="recommend-btn" onclick="openRecommend()">★ 자리 추천</button>
+      <div class="icon-btn" onclick="exportData()">📤</div>
+      <label class="icon-btn" for="importFile">📥</label>
+      <input id="importFile" type="file" accept=".json" style="display:none" onchange="handleImport(event)">
+    </div>
+  </div>
+  <div class="search-bar">
+    <span style="color:var(--muted)">🔍</span>
+    <input id="searchInput" placeholder="섹션 또는 치수 검색..." oninput="onSearch()">
+    <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
+  </div>
+  <div class="search-filter-bar" id="searchFilterBar">
+    <div class="sf-chip empty-only" id="sfEmpty" onclick="toggleEmptyFilter(this)">⬜ 빈 슬롯만</div>
+    <div class="sf-chip" id="sfCN10" onclick="toggleMatFilter('CN10',this)">CN10</div>
+    <div class="sf-chip" id="sfCN20" onclick="toggleMatFilter('CN20',this)">CN20</div>
+    <div class="sf-chip" id="sfRS40" onclick="toggleMatFilter('RS40',this)">RS40</div>
+    <div class="sf-chip" id="sfRS20" onclick="toggleMatFilter('RS20',this)">RS20</div>
+    <div class="sf-chip" id="sfCM20" onclick="toggleMatFilter('CM20',this)">CM20</div>
+    <div class="sf-chip" id="sfNoMat" onclick="toggleMatFilter('none',this)">소재없음</div>
+    <div class="sf-chip" id="sfStale" onclick="toggleStaleFilter(this)">⚠️ 장기미출고</div>
+  </div>
+</div>
+
+<div class="recommend-panel" id="recommendPanel">
+  <div class="recommend-header">
+    <div>
+      <div class="recommend-title">★ 추천 슬롯</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px" id="recommendSubtitle"></div>
+    </div>
+    <div class="recommend-close" onclick="closeRecommend()">닫기</div>
+  </div>
+  <div class="recommend-chips" id="recommendChips"></div>
+  <div class="rec-list" id="recommendList"></div>
+</div>
+
+<div class="panel" id="panel-map">
+  <div class="stats-row" id="statsRow"></div>
+  <div class="filter-row" id="filterRow">
+    <div class="fchip on" onclick="setFilter('all',this)">전체</div>
+    <div class="fchip" onclick="setFilter('IN',this)">🟢 입고</div>
+    <div class="fchip" onclick="setFilter('EMPTY',this)">⬜ 공실</div>
+    <div class="fchip" onclick="setFilter('UNUSED',this)">🔴 미사용</div>
+  </div>
+  <div class="overview-grid" id="overviewGrid"></div>
+</div>
+
+<div class="panel" id="panel-list">
+  <div class="section-list" id="sectionList"></div>
+</div>
+
+<div class="panel" id="panel-detail">
+  <div class="detail-header">
+    <div class="back-btn" onclick="goBack()">← 뒤로</div>
+    <div class="detail-title" id="detailTitle">섹션 A</div>
+  </div>
+  <div id="detailContent"></div>
+</div>
+
+<div class="search-result-panel" id="searchResultPanel">
+  <div class="search-result-header" id="searchResultHeader">검색 결과</div>
+  <div id="searchResultList"></div>
+</div>
+
+<div class="panel on" id="panel-full">
+  <div id="mapViewport" style="width:100%;height:100%;overflow:hidden;position:relative;">
+    <div id="mapCanvas" style="width:100%;height:100%;">
+      <div class="full-warehouse" id="fullWarehouse" style="height:100%"></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-table">
+  <div class="table-toolbar">
+    <div class="table-toolbar-title">📊 전체 슬롯 목록</div>
+    <div class="tbl-selected-count" id="tblSelectedCount">0개 선택됨</div>
+    <button class="tbl-btn" onclick="tblSelectAll()">전체선택</button>
+    <button class="tbl-btn" onclick="tblClearSelect()">선택해제</button>
+    <button class="tbl-btn pdf-btn" id="pdfBtn" onclick="printSelected()" disabled>🖨️ PDF 인쇄</button>
+  </div>
+  <div class="wh-table-wrap">
+    <table class="wh-table" id="whTable">
+      <thead>
+        <tr>
+          <th><input type="checkbox" class="tbl-checkbox" id="chkAll" onclick="tblToggleAll(this)"></th>
+          <th onclick="tblSort('loc')">위치 <span class="sort-icon">↕</span></th>
+          <th onclick="tblSort('section')">섹션 <span class="sort-icon">↕</span></th>
+          <th onclick="tblSort('floor')">층 <span class="sort-icon">↕</span></th>
+          <th onclick="tblSort('type')">타입 <span class="sort-icon">↕</span></th>
+          <th onclick="tblSort('state')">상태 <span class="sort-icon">↕</span></th>
+          <th onclick="tblSort('item')">치수 <span class="sort-icon">↕</span></th>
+          <th onclick="tblSort('material')">소재 <span class="sort-icon">↕</span></th>
+          <th onclick="tblSort('qty')">수량 <span class="sort-icon">↕</span></th>
+          <th onclick="tblSort('inDate')">입고일 <span class="sort-icon">↕</span></th>
+          <th>메모</th>
+        </tr>
+      </thead>
+      <tbody id="whTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel" id="panel-queue">
+  <div class="pq-tabs">
+    <button class="pq-tab on" id="pqTabQueue" onclick="pqSwitchMode('queue')">대기열</button>
+    <button class="pq-tab" id="pqTabLabel" onclick="pqSwitchMode('label')">전체 라벨</button>
+  </div>
+
+  <div id="pqModeQueue">
+    <div class="pq-toolbar">
+      <div class="pq-count" id="pqCount">0개</div>
+      <div style="flex:1"></div>
+      <button class="pq-btn clear" onclick="clearPrintQueue()">전체삭제</button>
+      <button class="pq-btn print" onclick="printQueue()">A4 인쇄</button>
+    </div>
+    <div id="pqList"></div>
+  </div>
+
+  <div id="pqModeLabel" style="display:none">
+    <div class="pq-toolbar">
+      <select id="lblSec" class="pq-select" onchange="renderLabels()">
+        <option value="all">전체 섹션</option>
+      </select>
+      <div class="pq-so">
+        <label class="pq-sz"><input type="radio" name="lblSz" value="lg" onchange="renderLabels()"><span>대</span></label>
+        <label class="pq-sz"><input type="radio" name="lblSz" value="md" onchange="renderLabels()" checked><span>중</span></label>
+        <label class="pq-sz"><input type="radio" name="lblSz" value="sm" onchange="renderLabels()"><span>소</span></label>
+      </div>
+      <div class="pq-count" id="lblCount">0개</div>
+      <div style="flex:1"></div>
+      <button class="pq-btn print" onclick="printLabels()">인쇄</button>
+    </div>
+    <div id="lblPreview" class="lbl-preview"></div>
+  </div>
+</div>
+
+<div id="printArea"></div>
+<div class="pq-print-area" id="pqPrintArea" style="display:none"></div>
+
+<div class="tabbar">
+  <div class="tabbar-item on" id="tab-full" onclick="switchTab('full')">
+    <div class="tabbar-icon">🏭</div>전체뷰
+  </div>
+  <div class="tabbar-item" id="tab-table" onclick="switchTab('table')">
+    <div class="tabbar-icon">📊</div>목록
+  </div>
+  <div class="tabbar-item" id="tab-queue" onclick="switchTab('queue')">
+    <div class="tabbar-icon">🏷</div>인쇄<span class="pq-badge" id="pqBadge" style="display:none;background:#dc2626;color:#fff;font-size:9px;border-radius:8px;padding:0 5px;margin-left:2px;font-weight:700"></span>
+  </div>
+  <div class="tabbar-item" id="tab-back" onclick="goBackTab()">
+    <div class="tabbar-icon">↩</div>뒤로
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="sheetTitle">슬롯 편집</div>
+  <div class="sheet-field">
+    <span class="sheet-label">위치</span>
+    <span class="sheet-value" id="sheetLoc">-</span>
+  </div>
+  <div class="sheet-field">
+    <span class="sheet-label">유형</span>
+    <select id="sheetType" class="sheet-select">
+      <option value="">미지정</option>
+      <option>반박스</option><option>풀박스</option><option>흰색</option>
+      <option>노란색</option><option>초소형</option><option>서랍</option>
+    </select>
+  </div>
+  <div class="sheet-field">
+    <span class="sheet-label">상태</span>
+    <select id="sheetStatus" class="sheet-select">
+      <option value="">미지정</option>
+      <option value="EMPTY">⬜ 공실 (비어있음)</option>
+      <option value="UNUSED">🔴 미사용 (닫힌 슬롯)</option>
+    </select>
+  </div>
+  <div class="sheet-field">
+    <span class="sheet-label">치수</span>
+    <input id="sheetItem" class="sheet-input" placeholder="예: 245*250*15">
+  </div>
+  <div class="sheet-field">
+    <span class="sheet-label">소재</span>
+    <select id="sheetMaterial" class="sheet-select">
+      <option value="">미지정</option>
+      <option value="CN10">CN10 (노란색)</option>
+      <option value="CN20">CN20 (검은색)</option>
+      <option value="RS40">RS40 (청록색)</option>
+      <option value="RS20">RS20 (회색)</option>
+      <option value="CM20">CM20 (베이지)</option>
+    </select>
+  </div>
+  <div class="sheet-field">
+    <span class="sheet-label">수량</span>
+    <input id="sheetQty" class="sheet-input" type="number" min="0" placeholder="0">
+  </div>
+  <div class="sheet-field">
+    <span class="sheet-label">입고일</span>
+    <input id="sheetInDate" class="sheet-input" type="date">
+  </div>
+  <div class="sheet-field">
+    <span class="sheet-label">메모</span>
+    <input id="sheetMemo" class="sheet-input" placeholder="간단 메모">
+  </div>
+  <div class="sheet-actions">
+    <button class="sheet-btn cancel" onclick="closeSheet()">취소</button>
+    <button class="sheet-btn queue" onclick="addToQueue()">🏷 인쇄추가</button>
+    <button class="sheet-btn save" onclick="saveSheet()">저장</button>
+  </div>
+</div>
+
+<div class="popup-backdrop" id="popupBackdrop" onclick="closeSlotPopup()"></div>
+<div class="slot-popup" id="slotPopup">
+  <div class="popup-header">
+    <div><span class="popup-title" id="popupTitle">-</span><span class="popup-subtitle" id="popupSubtitle"></span></div>
+    <button class="popup-close" onclick="closeSlotPopup()">✕</button>
+  </div>
+  <div class="popup-cards" id="popupCards"></div>
+  <div class="popup-footer">
+    <button class="popup-close-btn" onclick="closeSlotPopup()">닫기</button>
+    <button class="popup-add-btn" onclick="editPopupSlot()">✏️ 편집/저장</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="app.js"></script>
+
+<script>
+(function(){
+  const viewport = document.getElementById('mapViewport');
+  const canvas = document.getElementById('mapCanvas');
+  if(!viewport || !canvas) return;
+
+  let scale = 1, minScale = 0.15, maxScale = 3;
+  let originX = 0, originY = 0;
+  let lastDist = 0, lastMidX = 0, lastMidY = 0;
+  let dragging = false, dragStartX = 0, dragStartY = 0, dragOriginX = 0, dragOriginY = 0;
+
+  function applyTransform(){
+    canvas.style.transform = `translate(${originX}px,${originY}px) scale(${scale})`;
+  }
+
+  function clampOrigin(){
+    const vw = viewport.clientWidth, vh = viewport.clientHeight;
+    const cw = canvas.scrollWidth * scale, ch = canvas.scrollHeight * scale;
+    const margin = 100;
+    const minX = Math.min(0, vw - cw - margin), minY = Math.min(0, vh - ch - margin);
+    originX = Math.max(minX, Math.min(margin, originX));
+    originY = Math.max(minY, Math.min(margin, originY));
+  }
+
+  function isOverview(){ return !currentSection; }
+
+  function initScale(){
+    if(isOverview()){
+      scale = 1;
+      originX = 0;
+      originY = 0;
+      canvas.style.transform = '';
+      viewport.style.overflow = 'hidden';
+      return;
+    }
+    const isMobile = window.innerWidth <= 768;
+    if(isMobile){
+      scale = 1;
+      originX = 0;
+      originY = 0;
+      canvas.style.transform = 'none';
+      viewport.style.overflow = 'auto';
+      return;
+    }
+    const vw = viewport.clientWidth, vh = viewport.clientHeight;
+    const cw = canvas.scrollWidth, ch = canvas.scrollHeight;
+    if(!cw || !ch) return;
+    scale = Math.min(vw / cw, vh / ch, 1) * 0.95;
+    originX = 0;
+    originY = 0;
+    applyTransform();
+  }
+  window.reinitMap = initScale;
+
+  const origRenderFullView = window.renderFullView;
+  window.renderFullView = function(){
+    origRenderFullView && origRenderFullView();
+    setTimeout(initScale, 100);
+  };
+  setTimeout(initScale, 100);
+  setTimeout(initScale, 500);
+  setTimeout(initScale, 1500);
+  window.addEventListener('load', () => setTimeout(initScale, 200));
+
+  viewport.addEventListener('touchstart', e => {
+    if(isOverview()) return;
+    if(window.innerWidth <= 768) return;
+    if(e.touches.length === 2){
+      e.preventDefault();
+      const t0 = e.touches[0], t1 = e.touches[1];
+      lastDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      lastMidX = (t0.clientX + t1.clientX) / 2;
+      lastMidY = (t0.clientY + t1.clientY) / 2;
+      dragging = false;
+    } else if(e.touches.length === 1){
+      dragging = true;
+      dragStartX = e.touches[0].clientX;
+      dragStartY = e.touches[0].clientY;
+      dragOriginX = originX;
+      dragOriginY = originY;
+    }
+  }, {passive: false});
+
+  viewport.addEventListener('touchmove', e => {
+    if(isOverview()) return;
+    if(window.innerWidth <= 768) return;
+    if(e.touches.length === 2){
+      e.preventDefault();
+      const t0 = e.touches[0], t1 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const midX = (t0.clientX + t1.clientX) / 2;
+      const midY = (t0.clientY + t1.clientY) / 2;
+      const rect = viewport.getBoundingClientRect();
+      const ratio = dist / lastDist;
+      const newScale = Math.max(minScale, Math.min(maxScale, scale * ratio));
+      const focalX = midX - rect.left;
+      const focalY = midY - rect.top;
+      originX = focalX - (focalX - originX) * (newScale / scale);
+      originY = focalY - (focalY - originY) * (newScale / scale);
+      scale = newScale;
+      originX += midX - lastMidX;
+      originY += midY - lastMidY;
+      lastDist = dist;
+      lastMidX = midX;
+      lastMidY = midY;
+      clampOrigin();
+      applyTransform();
+    } else if(e.touches.length === 1 && dragging){
+      e.preventDefault();
+      originX = dragOriginX + (e.touches[0].clientX - dragStartX);
+      originY = dragOriginY + (e.touches[0].clientY - dragStartY);
+      clampOrigin();
+      applyTransform();
+    }
+  }, {passive: false});
+
+  viewport.addEventListener('touchend', e => {
+    if(e.touches.length < 2) lastDist = 0;
+    if(e.touches.length === 0) dragging = false;
+  }, {passive: true});
+
+  let mouseDown = false, mStartX = 0, mStartY = 0, mOriginX = 0, mOriginY = 0;
+  viewport.addEventListener('mousedown', e => {
+    if(isOverview()) return;
+    mouseDown = true;
+    mStartX = e.clientX;
+    mStartY = e.clientY;
+    mOriginX = originX;
+    mOriginY = originY;
+    viewport.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    if(!mouseDown) return;
+    originX = mOriginX + (e.clientX - mStartX);
+    originY = mOriginY + (e.clientY - mStartY);
+    clampOrigin();
+    applyTransform();
+  });
+  window.addEventListener('mouseup', () => {
+    mouseDown = false;
+    viewport.style.cursor = 'grab';
+  });
+  viewport.style.cursor = 'grab';
+
+  viewport.addEventListener('wheel', e => {
+    if(isOverview()) return;
+    e.preventDefault();
+    const rect = viewport.getBoundingClientRect();
+    const focalX = e.clientX - rect.left;
+    const focalY = e.clientY - rect.top;
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.max(minScale, Math.min(maxScale, scale * delta));
+    originX = focalX - (focalX - originX) * (newScale / scale);
+    originY = focalY - (focalY - originY) * (newScale / scale);
+    scale = newScale;
+    clampOrigin();
+    applyTransform();
+  }, {passive: false});
+
+  let lastTap = 0, wasPinch = false;
+  viewport.addEventListener('touchstart', e => {
+    if(e.touches.length >= 2) wasPinch = true;
+  }, {passive: true});
+  viewport.addEventListener('touchend', e => {
+    if(e.touches.length === 0){
+      if(wasPinch){ wasPinch = false; lastTap = 0; return; }
+      const now = Date.now();
+      if(now - lastTap < 300){ initScale(); }
+      lastTap = now;
+    }
+  }, {passive: true});
+})();
+</script>
+
+<div id="slotTooltip"></div>
+
+</body>
+</html>
