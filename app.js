@@ -138,26 +138,32 @@ async function loadFromSheet(){
 
     // 1순위: Apps Script API (CORS 문제 없음, 양방향 동기화)
     if(APPS_SCRIPT_URL){
-      const res = await fetch(APPS_SCRIPT_URL);
-      const json = await res.json();
-      if(json.success) rows = json.data;
+      const res = await fetch(APPS_SCRIPT_URL, { redirect: 'follow' });
+      const text = await res.text();
+      try{
+        const json = JSON.parse(text);
+        if(json.success) rows = json.data;
+      }catch(pe){ console.error('Apps Script parse error:', pe); }
     }
 
     // 2순위: CSV export (로컬에서만 동작, github.io에서는 CORS 차단)
     if(!rows){
-      const sheetId = '1zWCMLdOZGgYUTN8Bj3kDfW5XpXN7CqZZm6DXrX2yZgE';
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
-      const res = await fetch(url);
-      const csv = await res.text();
-      const lines = csv.trim().split('\n');
-      const header = lines[0].split(',').map(h => h.trim().toLowerCase());
-      rows = [];
-      for(let i=1; i<lines.length; i++){
-        const values = lines[i].split(',').map(v => v.trim());
-        const obj = {};
-        header.forEach((h,j) => obj[h] = values[j]||'');
-        rows.push(obj);
-      }
+      try{
+        const sheetId = '1zWCMLdOZGgYUTN8Bj3kDfW5XpXN7CqZZm6DXrX2yZgE';
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('CSV fetch failed');
+        const csv = await res.text();
+        const lines = csv.trim().split('\n');
+        const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+        rows = [];
+        for(let i=1; i<lines.length; i++){
+          const values = lines[i].split(',').map(v => v.trim());
+          const obj = {};
+          header.forEach((h,j) => obj[h] = values[j]||'');
+          rows.push(obj);
+        }
+      }catch(ce){}
     }
 
     if(!rows) return;
