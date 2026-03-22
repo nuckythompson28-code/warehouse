@@ -2935,7 +2935,8 @@ function saveCardInline(id,cardEl){
   const newStatus=cardEl.querySelector('.cedit-status').value;
   d.status=d.item?'':newStatus==='UNUSED'?'UNUSED':'';
   if(d.item && d.status==='UNUSED') d.status='';
-  d.saved=Number(cardEl.querySelector('.cedit-saved').value);
+  const savedEl=cardEl.querySelector('.cedit-saved');
+  d.saved=savedEl?Number(savedEl.value):(d.saved||0);
   d.inDate=cardEl.querySelector('.cedit-indate').value;
   d.memo=cardEl.querySelector('.cedit-memo').value.trim();
   popupEditingIdx=null;
