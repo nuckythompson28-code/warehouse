@@ -140,36 +140,73 @@ async function loadShipmentData(){
   }
 }
 
+// Apps Script 웹 앱 URL (배포 후 입력)
+const APPS_SCRIPT_URL = ''; // TODO: Apps Script 배포 URL 입력
+
 async function loadFromSheet(){
   try{
-    const sheetId = '1zWCMLdOZGgYUTN8Bj3kDfW5XpXN7CqZZm6DXrX2yZgE';
-    const gid = '0';
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
-    const res = await fetch(url);
-    const csv = await res.text();
-    const lines = csv.trim().split('\n');
-    const header = lines[0].split(',').map(h => h.trim().toLowerCase());
-    for(let i=1; i<lines.length; i++){
-      const values = lines[i].split(',').map(v => v.trim());
-      const obj = {};
-      header.forEach((h,j) => obj[h] = values[j]||'');
+    let rows = null;
+
+    // 1순위: Apps Script API (CORS 문제 없음, 양방향 동기화)
+    if(APPS_SCRIPT_URL){
+      const res = await fetch(APPS_SCRIPT_URL);
+      const json = await res.json();
+      if(json.success) rows = json.data;
+    }
+
+    // 2순위: CSV export (로컬에서만 동작, github.io에서는 CORS 차단)
+    if(!rows){
+      const sheetId = '1zWCMLdOZGgYUTN8Bj3kDfW5XpXN7CqZZm6DXrX2yZgE';
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
+      const res = await fetch(url);
+      const csv = await res.text();
+      const lines = csv.trim().split('\n');
+      const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+      rows = [];
+      for(let i=1; i<lines.length; i++){
+        const values = lines[i].split(',').map(v => v.trim());
+        const obj = {};
+        header.forEach((h,j) => obj[h] = values[j]||'');
+        rows.push(obj);
+      }
+    }
+
+    if(!rows) return;
+
+    rows.forEach(obj => {
       const loc = obj.location||'';
       const m = loc.match(/([A-P])(\d+)-(\d+)/);
-      if(!m) continue;
+      if(!m) return;
       const [,section,floor,order] = m;
       const idx = data.findIndex(d => d.section===section && d.floor===Number(floor) && d.order===Number(order));
-      if(idx<0) continue;
+      if(idx<0) return;
       data[idx].item = obj.dimension||obj.item||'';
       data[idx].material = obj.material||'';
       data[idx].qty = obj.quantity||obj.qty||'';
       data[idx].inDate = obj['in date']||obj.indate||'';
       data[idx].memo = obj.memo||obj.note||obj.comments||'';
-    }
+    });
+
     localStorage.setItem('warehouseDataCache', JSON.stringify(data));
     localStorage.setItem('warehouseDataTime', Date.now().toString());
   }catch(e){
     console.error('Sheet load error:', e);
   }
+}
+
+async function syncToSheet(slotData){
+  if(!APPS_SCRIPT_URL) return;
+  const location = `${slotData.section}${slotData.floor}-${slotData.order}`;
+  try{
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        location, item: slotData.item||'', material: slotData.material||'',
+        qty: slotData.qty||'', inDate: slotData.inDate||'', memo: slotData.memo||''
+      })
+    });
+  }catch(e){ console.error('Sheet sync error:', e); }
 }
 
 function loadFromCache(){
@@ -330,6 +367,7 @@ function saveSheet(){
   data[idx].memo = document.getElementById('sheetMemo').value || '';
   localStorage.setItem('warehouseDataCache', JSON.stringify(data));
   localStorage.setItem('warehouseDataTime', Date.now().toString());
+  syncToSheet(data[idx]);
   renderAll();
   closeSheet();
   showToast('저장됨');
@@ -607,6 +645,7 @@ function saveSlotPopup(){
   }
   localStorage.setItem('warehouseDataCache', JSON.stringify(data));
   localStorage.setItem('warehouseDataTime', Date.now().toString());
+  syncToSheet(data[idx]);
   renderAll();
   closeSlotPopup();
   showToast('저장됨');
