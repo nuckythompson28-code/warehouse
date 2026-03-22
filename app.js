@@ -970,7 +970,7 @@ async function initialize(){
   loadFromCache();
   loadShipmentData();
   renderAll();
-  loadFromSheet().then(() => loadShipmentData());
+  loadFromSheet().then(() => { renderAll(); loadShipmentData(); });
   handleQRParam();
 }
 
