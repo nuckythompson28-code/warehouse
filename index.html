@@ -2256,6 +2256,21 @@ function openSection(sec){
   document.getElementById('panel-detail').classList.add('on');
   document.getElementById('detailTitle').textContent='섹션 '+sec;
   renderDetail(sec);
+  // mirrored(짝수) 섹션은 1번 박스가 오른쪽이므로 스크롤을 오른쪽 끝으로
+  if(isEven(sec)){
+    setTimeout(()=>{
+      const rows=document.querySelectorAll('#detailContent .slots-row.mirrored');
+      rows.forEach(r=>{
+        const parent=r.closest('.floor-block')||r.parentElement;
+        if(parent) parent.scrollLeft=parent.scrollWidth;
+      });
+      const detail=document.getElementById('detailContent');
+      if(detail) detail.scrollLeft=detail.scrollWidth;
+      // 뷰포트도 오른쪽으로
+      const panel=document.getElementById('panel-detail');
+      if(panel) panel.scrollLeft=panel.scrollWidth;
+    },100);
+  }
 }
 
 function goBack(){
