@@ -2992,15 +2992,20 @@ function addNewCard(){
   if(!popupKey) return;
   const items=data.filter(d=>d.key===popupKey);
   const first=items[0];
-  if(!first) return;
+  // 빈 박스: popupKey에서 section/floor/order 파싱
+  const parts=popupKey.split('|');
+  const sec=first?first.section:(parts[0]||'');
+  const fl=first?first.floor:Number(parts[1])||1;
+  const ord=first?first.order:Number(parts[2])||1;
+  const tp=first?first.type:'반박스';
   // 새 아이템 데이터 생성
   const newItem={
     id:data.length,
     key:popupKey,
-    section:first.section,
-    floor:first.floor,
-    order:first.order,
-    type:first.type,
+    section:sec,
+    floor:fl,
+    order:ord,
+    type:tp,
     status:'',
     saved:0,
     item:'',
