@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>창고 대시보드</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#f5f3f0;--surface:#ffffff;--surface2:#f0ede8;--border:#e5e0d8;
+  --accent:#d97706;--text:#1c1917;--muted:#78716c;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+  --red:#dc2626;--orange:#ea580c;--yellow:#ca8a04;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;padding:0 0 40px;
+}
+
+/* Header */
+.header{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg);border-bottom:1px solid var(--border);
+  padding:14px 20px;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.header-left{display:flex;align-items:center;gap:16px}
+.back-link{
+  color:var(--accent);text-decoration:none;font-size:14px;font-weight:600;
+  white-space:nowrap;
+}
+.back-link:hover{text-decoration:underline}
+.header h1{font-size:18px;font-weight:700;color:var(--text)}
+.header-right{font-size:12px;color:var(--muted)}
+
+/* Container */
+.container{max-width:1200px;margin:0 auto;padding:16px}
+
+/* Loading */
+.loading-wrap{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 20px;gap:16px;
+}
+.spinner{
+  width:36px;height:36px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--muted)}
+.error-msg{
+  background:#fef2f2;border:1px solid #fecaca;border-radius:12px;
+  padding:16px 20px;color:var(--red);font-size:14px;margin:20px;
+}
+
+/* Summary Cards */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:16px 18px;box-shadow:var(--shadow);
+}
+.card-label{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.card-value{font-size:28px;font-weight:700;color:var(--text);line-height:1.1}
+.card-value.accent{color:var(--accent)}
+.card-value.red{color:var(--red)}
+.card-value.orange{color:var(--orange)}
+
+/* Section titles */
+.section-title{
+  font-size:15px;font-weight:700;margin-bottom:12px;padding-bottom:8px;
+  border-bottom:2px solid var(--accent);display:inline-block;
+}
+
+/* Table section */
+.table-section{margin-bottom:32px}
+.table-controls{
+  display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;
+}
+.filter-input{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:8px 12px;font-size:13px;font-family:'Pretendard';color:var(--text);
+  outline:none;min-width:160px;
+}
+.filter-input:focus{border-color:var(--accent)}
+.filter-select{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:8px 12px;font-size:13px;font-family:'Pretendard';color:var(--text);
+  outline:none;cursor:pointer;
+}
+.table-wrap{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;box-shadow:var(--shadow);
+}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{background:var(--surface2)}
+th{
+  padding:10px 14px;text-align:left;font-weight:600;font-size:12px;
+  color:var(--muted);white-space:nowrap;cursor:pointer;user-select:none;
+  border-bottom:1px solid var(--border);position:relative;
+}
+th:hover{color:var(--text)}
+th .sort-arrow{margin-left:4px;font-size:10px;opacity:.5}
+th.sorted .sort-arrow{opacity:1;color:var(--accent)}
+td{padding:10px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{filter:brightness(0.95)}
+tbody tr{position:relative}
+/* 호버 툴팁 */
+.row-tip{
+  display:none;position:absolute;left:50%;top:100%;transform:translateX(-50%);
+  z-index:50;background:#1c1917;color:#fff;padding:8px 12px;border-radius:8px;
+  font-size:12px;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.3);
+  line-height:1.6;pointer-events:none;
+}
+tbody tr:hover .row-tip{display:block}
+/* 악성재고 그라데이션은 인라인 스타일로 적용 */
+.badge{
+  display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;
+}
+.badge-red{background:#fee2e2;color:var(--red)}
+.badge-orange{background:#ffedd5;color:var(--orange)}
+.badge-yellow{background:#fef9c3;color:var(--yellow)}
+.no-data{padding:32px;text-align:center;color:var(--muted);font-size:14px}
+
+/* Chart section */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.chart-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:20px;box-shadow:var(--shadow);
+}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-label{width:60px;font-size:12px;font-weight:600;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:22px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:6px;transition:width .4s ease;min-width:2px;position:relative}
+.bar-count{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3);
+}
+.bar-count-out{
+  margin-left:8px;font-size:12px;font-weight:600;color:var(--muted);flex-shrink:0;width:32px;
+}
+
+/* Section stale bars */
+.stale-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.stale-label{width:40px;font-size:12px;font-weight:600;text-align:right;flex-shrink:0}
+.stale-track{flex:1;height:18px;background:var(--surface2);border-radius:6px;overflow:hidden}
+.stale-fill{height:100%;border-radius:6px;transition:width .4s ease}
+.stale-pct{width:48px;font-size:12px;font-weight:600;color:var(--muted);flex-shrink:0}
+
+/* Material colors */
+.mat-CN10{background:#facc15}.mat-CN20{background:#374151}.mat-RS40{background:#0d9488}
+.mat-RS20{background:#6b7280}.mat-CM20{background:#a8a29e}
+.mat-MP{background:#8b5cf6}.mat-MNW{background:#3b82f6}
+.mat-default{background:var(--accent)}
+
+/* Responsive */
+@media(max-width:900px){
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .cards{grid-template-columns:1fr 1fr}
+  .card-value{font-size:22px}
+  .header h1{font-size:15px}
+  .container{padding:12px}
+  .table-controls{flex-direction:column}
+  .filter-input,.filter-select{width:100%}
+  td,th{padding:8px 10px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <a href="index_v2.html" class="back-link">&larr; 창고 맵</a>
+    <h1>창고 대시보드</h1>
+  </div>
+  <div class="header-right" id="updateTime"></div>
+</div>
+
+<div class="container" id="app">
+  <div class="loading-wrap" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">데이터 불러오는 중...</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const API_URL='https://script.google.com/macros/s/AKfycbwlKkpaExc4_RP6iyVHVCbkEKUfFEmVO7tRFzoiLziYh3VzBt7eLx6DdOsVOk-QFD1B5Q/exec';
+  const TODAY=new Date();
+  const MS_PER_DAY=86400000;
+
+  const MATERIAL_COLORS={
+    'CN10':'#facc15','CN20':'#374151','RS40':'#0d9488','RS20':'#6b7280',
+    'CM20':'#a8a29e','M/P':'#8b5cf6','M/NW':'#3b82f6'
+  };
+
+  function daysSince(dateStr){
+    if(!dateStr)return Infinity;
+    const d=new Date(dateStr);
+    if(isNaN(d))return Infinity;
+    return Math.floor((TODAY-d)/MS_PER_DAY);
+  }
+
+  function stripParens(s){
+    if(!s)return '';
+    return s.replace(/\(.*?\)/g,'').trim();
+  }
+
+  function matCssClass(mat){
+    return 'mat-'+(mat||'').replace('/','');
+  }
+
+  function matColor(mat){
+    return MATERIAL_COLORS[mat]||'#d97706';
+  }
+
+  async function loadData(){
+    const [sheetRes,shipJson,qtyJson]=await Promise.all([
+      fetch(API_URL+'?action=getAll').then(r=>r.json()),
+      fetch('shipment_data.json').then(r=>r.json()),
+      fetch('qty_lookup.json').then(r=>r.json()).catch(()=>({}))
+    ]);
+    return {sheetData:sheetRes.data||[],shipment:shipJson,qtyLookup:qtyJson};
+  }
+
+  function buildItems(sheetData,shipment,qtyLookup){
+    const items=[];
+    for(const row of sheetData){
+      const section=row.section||'';
+      const floor=row.floor||'';
+      const order=row.order||'';
+      const rawMat=String(row.material||'');
+      const baseMat=stripParens(rawMat);
+      const rawItem=String(row.item||'').toLowerCase();
+      const key=baseMat+'|'+rawItem;
+      const qty=(key in qtyLookup)?qtyLookup[key]:(parseInt(row.qty)||0);
+      const ship=shipment[key]||{};
+      const lastOut=ship.lastOut||'';
+      const lastIn=ship.lastIn||'';
+      const totalOut=ship.totalOut||0;
+      const totalIn=ship.totalIn||0;
+      const staleDays=lastOut?daysSince(lastOut):Infinity;
+
+      items.push({
+        section,floor,order,
+        material:baseMat,
+        materialFull:rawMat,
+        item:row.item||'',
+        qty,
+        lastOut,
+        lastIn,
+        totalOut,
+        totalIn,
+        staleDays,
+        neverShipped:!lastOut&&totalOut===0
+      });
+    }
+    return items;
+  }
+
+  function render(items){
+    const app=document.getElementById('app');
+
+    // Summary stats
+    const totalSlots=items.length;
+    const usedSlots=items.filter(i=>i.qty>0).length;
+    const stale180=items.filter(i=>i.staleDays>=180).length;
+    const neverShipped=items.filter(i=>i.neverShipped).length;
+
+    // Update time
+    document.getElementById('updateTime').textContent=
+      TODAY.toLocaleDateString('ko-KR')+' '+TODAY.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' 기준';
+
+    let html='';
+
+    // 1. Summary cards
+    html+='<div class="cards">';
+    html+=cardHTML('총 슬롯 수',totalSlots,'');
+    html+=cardHTML('사용 중 슬롯',usedSlots,'accent');
+    html+=cardHTML('장기 미출고 (180일+)',stale180,'orange');
+    html+=cardHTML('출고이력 없음',neverShipped,'red');
+    html+='</div>';
+
+    // 2. Stale table
+    html+='<div class="table-section">';
+    html+='<div class="section-title">장기 미출고 제품</div>';
+    html+='<div class="table-controls">';
+    html+='<input class="filter-input" id="filterSearch" placeholder="재질 또는 치수 검색..." />';
+    html+='<select class="filter-select" id="filterSection"><option value="">전체 섹션</option></select>';
+    html+='<select class="filter-select" id="filterMaterial"><option value="">전체 재질</option></select>';
+    html+='</div>';
+    html+='<div class="table-wrap"><div class="table-scroll">';
+    html+='<table id="staleTable"><thead><tr>';
+    html+='<th data-col="section">위치 <span class="sort-arrow">&#9650;</span></th>';
+    html+='<th data-col="material">재질 <span class="sort-arrow">&#9650;</span></th>';
+    html+='<th data-col="item">치수 <span class="sort-arrow">&#9650;</span></th>';
+    html+='<th data-col="qty">수량 <span class="sort-arrow">&#9650;</span></th>';
+    html+='<th data-col="lastOut">마지막 출고일 <span class="sort-arrow">&#9650;</span></th>';
+    html+='<th data-col="staleDays" class="sorted">미출고일수 <span class="sort-arrow">&#9660;</span></th>';
+    html+='</tr></thead><tbody id="staleBody"></tbody></table>';
+    html+='</div></div></div>';
+
+    // 3. Two column charts
+    html+='<div class="two-col">';
+
+    // Material distribution
+    html+='<div class="chart-card"><div class="section-title">재질별 분포</div><div id="matChart"></div></div>';
+
+    // Section stale ratio
+    html+='<div class="chart-card"><div class="section-title">섹션별 미출고 비율</div><div id="secChart"></div></div>';
+
+    html+='</div>';
+
+    app.innerHTML=html;
+
+    // Populate filters
+    const sections=[...new Set(items.map(i=>i.section))].filter(Boolean).sort();
+    const materials=[...new Set(items.map(i=>i.material))].filter(Boolean).sort();
+    const secSel=document.getElementById('filterSection');
+    const matSel=document.getElementById('filterMaterial');
+    sections.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;secSel.appendChild(o)});
+    materials.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;matSel.appendChild(o)});
+
+    // Stale items (180+ days)
+    let staleItems=items.filter(i=>i.staleDays>=180);
+    let sortCol='staleDays',sortAsc=false;
+
+    function renderTable(){
+      const search=(document.getElementById('filterSearch').value||'').toLowerCase();
+      const secFilter=secSel.value;
+      const matFilter=matSel.value;
+
+      let filtered=staleItems.filter(i=>{
+        if(secFilter&&i.section!==secFilter)return false;
+        if(matFilter&&i.material!==matFilter)return false;
+        if(search){
+          const hay=(i.material+' '+i.item+' '+i.materialFull).toLowerCase();
+          if(!hay.includes(search))return false;
+        }
+        return true;
+      });
+
+      filtered.sort((a,b)=>{
+        let va=a[sortCol],vb=b[sortCol];
+        if(sortCol==='section'){
+          va=a.section+'-'+a.floor+'-'+a.order;
+          vb=b.section+'-'+b.floor+'-'+b.order;
+        }
+        if(sortCol==='staleDays'){
+          // Infinity handling: never shipped always on top when desc
+          if(va===Infinity&&vb===Infinity)return 0;
+          if(va===Infinity)return sortAsc?1:-1;
+          if(vb===Infinity)return sortAsc?-1:1;
+        }
+        if(typeof va==='number'&&typeof vb==='number') return sortAsc?va-vb:vb-va;
+        return sortAsc?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
+      });
+
+      const tbody=document.getElementById('staleBody');
+      if(!filtered.length){
+        tbody.innerHTML='<tr><td colspan="6" class="no-data">해당하는 제품이 없습니다</td></tr>';
+        return;
+      }
+
+      // 미출고일수 최대값 계산 (그라데이션 스케일링용)
+      const maxDays=filtered.reduce((m,i)=>i.neverShipped?m:Math.max(m,i.staleDays),365);
+
+      tbody.innerHTML=filtered.map(i=>{
+        let badge='';
+        let bgColor='';
+        if(i.neverShipped){
+          // 출고이력 없음 = 가장 진한 빨강
+          bgColor='rgba(220,38,38,0.25)';
+          badge='<span class="badge badge-red">이력없음</span>';
+        }else{
+          // 미출고일수에 비례해서 빨강 강도 조절 (180일=연한, maxDays=진한)
+          const ratio=Math.min((i.staleDays-180)/(Math.max(maxDays-180,1)),1);
+          const alpha=(0.06+ratio*0.19).toFixed(2);
+          bgColor='rgba(220,38,38,'+alpha+')';
+          badge='<span class="badge" style="background:rgba(220,38,38,'+(0.1+ratio*0.2).toFixed(2)+');color:'+(ratio>0.5?'#fff':'#991b1b')+'">'+i.staleDays+'일</span>';
+        }
+        const loc=i.section+(i.floor?'/'+i.floor:'')+(i.order?'/'+i.order:'');
+        const outDate=i.lastOut||'-';
+        const tipLines=[];
+        tipLines.push('마지막 출고: '+(i.lastOut||'없음'));
+        tipLines.push('마지막 입고: '+(i.lastIn||'없음'));
+        tipLines.push('총 출고량: '+i.totalOut.toLocaleString()+'개');
+        tipLines.push('총 입고량: '+i.totalIn.toLocaleString()+'개');
+        const tip=tipLines.join('<br>');
+        return '<tr style="background:'+bgColor+'">'+
+          '<td>'+esc(loc)+'</td>'+
+          '<td>'+esc(i.material)+'</td>'+
+          '<td>'+esc(i.item)+'</td>'+
+          '<td style="text-align:right">'+i.qty.toLocaleString()+'</td>'+
+          '<td>'+esc(outDate)+'</td>'+
+          '<td style="position:relative">'+badge+'<div class="row-tip">'+tip+'</div></td>'+
+          '</tr>';
+      }).join('');
+    }
+
+    // Sort headers
+    document.querySelectorAll('#staleTable th').forEach(th=>{
+      th.addEventListener('click',()=>{
+        const col=th.dataset.col;
+        if(sortCol===col)sortAsc=!sortAsc;
+        else{sortCol=col;sortAsc=col==='staleDays'?false:true;}
+        document.querySelectorAll('#staleTable th').forEach(h=>{
+          h.classList.remove('sorted');
+          h.querySelector('.sort-arrow').innerHTML='&#9650;';
+        });
+        th.classList.add('sorted');
+        th.querySelector('.sort-arrow').innerHTML=sortAsc?'&#9650;':'&#9660;';
+        renderTable();
+      });
+    });
+
+    document.getElementById('filterSearch').addEventListener('input',renderTable);
+    secSel.addEventListener('change',renderTable);
+    matSel.addEventListener('change',renderTable);
+
+    renderTable();
+
+    // 3. Material chart
+    const matCounts={};
+    items.forEach(i=>{
+      const m=i.material||'기타';
+      matCounts[m]=(matCounts[m]||0)+1;
+    });
+    const matEntries=Object.entries(matCounts).sort((a,b)=>b[1]-a[1]);
+    const maxMat=matEntries.length?matEntries[0][1]:1;
+    const matChart=document.getElementById('matChart');
+    matChart.innerHTML=matEntries.map(([m,c])=>{
+      const pct=Math.round(c/maxMat*100);
+      const color=matColor(m);
+      return '<div class="bar-row">'+
+        '<div class="bar-label">'+esc(m)+'</div>'+
+        '<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+color+'">'+
+        (pct>15?'<span class="bar-count">'+c+'</span>':'')+
+        '</div></div>'+
+        (pct<=15?'<div class="bar-count-out">'+c+'</div>':'')+
+        '</div>';
+    }).join('');
+
+    // 4. Section stale ratio
+    const secStats={};
+    items.forEach(i=>{
+      const s=i.section||'?';
+      if(!secStats[s])secStats[s]={total:0,stale:0};
+      secStats[s].total++;
+      if(i.staleDays>=180)secStats[s].stale++;
+    });
+    const secEntries=Object.entries(secStats)
+      .map(([s,v])=>({section:s,total:v.total,stale:v.stale,pct:v.total?Math.round(v.stale/v.total*100):0}))
+      .filter(e=>e.total>0)
+      .sort((a,b)=>b.pct-a.pct);
+
+    const secChart=document.getElementById('secChart');
+    if(!secEntries.length){
+      secChart.innerHTML='<div class="no-data">데이터 없음</div>';
+    }else{
+      secChart.innerHTML=secEntries.map(e=>{
+        let color='var(--accent)';
+        if(e.pct>=80)color='var(--red)';
+        else if(e.pct>=50)color='var(--orange)';
+        else if(e.pct>=30)color='var(--yellow)';
+        return '<div class="stale-row">'+
+          '<div class="stale-label">'+esc(e.section)+'</div>'+
+          '<div class="stale-track"><div class="stale-fill" style="width:'+e.pct+'%;background:'+color+'"></div></div>'+
+          '<div class="stale-pct">'+e.pct+'% <span style="font-weight:400;color:var(--muted);font-size:11px">('+e.stale+'/'+e.total+')</span></div>'+
+          '</div>';
+      }).join('');
+    }
+  }
+
+  function cardHTML(label,value,cls){
+    return '<div class="card"><div class="card-label">'+label+'</div>'+
+      '<div class="card-value'+(cls?' '+cls:'')+'">'+value.toLocaleString()+'</div></div>';
+  }
+
+  function esc(s){
+    const d=document.createElement('div');d.textContent=s;return d.innerHTML;
+  }
+
+  // Init
+  loadData()
+    .then(({sheetData,shipment,qtyLookup})=>{
+      const items=buildItems(sheetData,shipment,qtyLookup||{});
+      render(items);
+    })
+    .catch(err=>{
+      console.error(err);
+      document.getElementById('app').innerHTML=
+        '<div class="error-msg">데이터를 불러오는 중 오류가 발생했습니다: '+esc(String(err.message||err))+'</div>';
+    });
+
+  function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+})();
+</script>
+</body>
+</html>
