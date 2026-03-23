@@ -233,9 +233,6 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 }
 .full-slots{display:flex;gap:3px;align-items:flex-start;flex-wrap:nowrap}
 .full-slots.mirrored{flex-direction:row-reverse}
-/* mirrored 섹션: 오른쪽 정렬 */
-.full-section.mirrored-sec { direction: rtl; }
-.full-section.mirrored-sec > * { direction: ltr; }
 
 /* ── 슬롯 렌더링 ── */
 .slots-row{display:flex;flex-wrap:nowrap;gap:2px;align-items:center;overflow-x:visible;padding-bottom:2px}
@@ -3116,6 +3113,7 @@ function renderFullAll(wrap){
   wrap.appendChild(detail);
   setTimeout(()=>{
     wrap.querySelectorAll(".full-section.mirrored-sec").forEach(s=>{s.scrollLeft=s.scrollWidth;});
+    setTimeout(()=>{ wrap.querySelectorAll(".full-section.mirrored-sec").forEach(s=>{ s.scrollLeft=s.scrollWidth; }); },200);
     if(fullViewTargetSec){
       const target=wrap.querySelector("[data-section=\""+fullViewTargetSec+"\"]");
       if(target) target.scrollIntoView({behavior:"smooth",block:"center"});
@@ -3295,6 +3293,8 @@ const allBtn=document.createElement('button');  allBtn.className='wh-detail-back
   // mirrored 섹션 오른쪽 끝으로 스크롤
   setTimeout(()=>{
     wrap.querySelectorAll(".full-section.mirrored-sec").forEach(s=>{ s.scrollLeft=s.scrollWidth; });
+    // 한번 더 확실하게
+    setTimeout(()=>{ wrap.querySelectorAll(".full-section.mirrored-sec").forEach(s=>{ s.scrollLeft=s.scrollWidth; }); },200);
     // 클릭한 섹션으로 스크롤 이동
     if(fullViewTargetSec){
       const target=wrap.querySelector('[data-section="'+fullViewTargetSec+'"]');
