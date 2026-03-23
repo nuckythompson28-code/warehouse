@@ -233,6 +233,9 @@ body{font-family:'Pretendard','IBM Plex Sans KR',sans-serif;background:var(--bg)
 }
 .full-slots{display:flex;gap:3px;align-items:flex-start;flex-wrap:nowrap}
 .full-slots.mirrored{flex-direction:row-reverse}
+/* mirrored 섹션: 오른쪽 정렬 */
+.full-section.mirrored-sec { direction: rtl; }
+.full-section.mirrored-sec > * { direction: ltr; }
 
 /* ── 슬롯 렌더링 ── */
 .slots-row{display:flex;flex-wrap:nowrap;gap:2px;align-items:center;overflow-x:visible;padding-bottom:2px}
@@ -3069,6 +3072,7 @@ const WH_GROUPS=[
    aisles:[[['Q','R','S','T','U']]]}
 ];
 let fullViewGroup=null;
+let fullViewTargetSec=null;
 
 function renderFullView(){
   const wrap=document.getElementById('fullWarehouse');
@@ -3076,10 +3080,48 @@ function renderFullView(){
   const panel=document.getElementById('panel-full');
   if(fullViewGroup){
     panel.classList.add('detail-active');
+    if(fullViewGroup==='ALL') return renderFullAll(wrap);
     return renderFullDetail(fullViewGroup, wrap);
   }
   panel.classList.remove('detail-active');
   renderFullOverview(wrap);
+}
+
+function renderFullAll(wrap){
+  const secSet=new Set(data.map(d=>d.section));
+  const detail=document.createElement("div");
+  detail.className="wh-detail";
+  const back=document.createElement("button");
+  back.className="wh-detail-back";
+  back.innerHTML="&#9664; 지도 보기";
+  back.addEventListener("click",()=>{fullViewGroup=null;renderFullView();});
+  detail.appendChild(back);
+  const title=document.createElement("div");
+  title.style.cssText="font-family:IBM Plex Mono;font-size:16px;font-weight:800;margin-bottom:12px";
+  title.textContent="전체 섹션";
+  detail.appendChild(title);
+  const sections=document.createElement("div");
+  sections.className="wh-detail-sections";
+  WH_GROUPS.forEach(g=>{
+    const ghd=document.createElement("div");
+    ghd.style.cssText="font-family:IBM Plex Mono;font-size:13px;font-weight:800;color:"+g.color+";padding:8px 0 4px;border-bottom:2px solid "+g.color+";margin:8px 0 4px";
+    ghd.textContent=g.label;
+    sections.appendChild(ghd);
+    const allSecs=[...g.secs,...(g.extra||[]),...(g.extra1||[]),...(g.extra2||[])];
+    allSecs.forEach(sec=>{
+      if(secSet.has(sec)) sections.appendChild(makeSecBlockFull(sec));
+    });
+  });
+  detail.appendChild(sections);
+  wrap.appendChild(detail);
+  setTimeout(()=>{
+    wrap.querySelectorAll(".full-section.mirrored-sec").forEach(s=>{s.scrollLeft=s.scrollWidth;});
+    if(fullViewTargetSec){
+      const target=wrap.querySelector("[data-section=\""+fullViewTargetSec+"\"]");
+      if(target) target.scrollIntoView({behavior:"smooth",block:"center"});
+      fullViewTargetSec=null;
+    }
+  },50);
 }
 
 function renderFullOverview(wrap){
@@ -3152,6 +3194,7 @@ function renderFullOverview(wrap){
       block.textContent=sec;
       block.addEventListener('click',()=>{
         fullViewGroup=gid;
+        fullViewTargetSec=sec;
         renderFullView();
       });
     }
@@ -3175,6 +3218,7 @@ function renderFullDetail(groupId, wrap){
   back.innerHTML='&#9664; 전체 보기';
   back.addEventListener('click',()=>{fullViewGroup=null;renderFullView();});
   detail.appendChild(back);
+const allBtn=document.createElement('button');  allBtn.className='wh-detail-back';  allBtn.style.cssText='margin-left:6px;background:var(--accent);color:#fff;border-color:var(--accent)';  allBtn.innerHTML='📋 전체뷰';  allBtn.addEventListener('click',()=>{fullViewGroup='ALL';renderFullView();});  detail.appendChild(allBtn);
 
   const title=document.createElement('div');
   title.style.cssText='font-family:IBM Plex Mono;font-size:16px;font-weight:800;color:'+g.color+';margin-bottom:12px';
@@ -3248,6 +3292,16 @@ function renderFullDetail(groupId, wrap){
   layout.appendChild(sections);
   detail.appendChild(layout);
   wrap.appendChild(detail);
+  // mirrored 섹션 오른쪽 끝으로 스크롤
+  setTimeout(()=>{
+    wrap.querySelectorAll(".full-section.mirrored-sec").forEach(s=>{ s.scrollLeft=s.scrollWidth; });
+    // 클릭한 섹션으로 스크롤 이동
+    if(fullViewTargetSec){
+      const target=wrap.querySelector('[data-section="'+fullViewTargetSec+'"]');
+      if(target) target.scrollIntoView({behavior:"smooth",block:"center"});
+      fullViewTargetSec=null;
+    }
+  },50);
 }
 
 function makeSecBlockFull(sec){
@@ -3258,7 +3312,8 @@ function makeSecBlockFull(sec){
   const hld=sd.filter(d=>getSlotState(d)==='EMPTY').length;
 
   const secDiv=document.createElement('div');
-  secDiv.className='full-section';
+  secDiv.className='full-section'+(even?' mirrored-sec':'');
+  secDiv.dataset.section=sec;
 
   const hd=document.createElement('div');
   hd.className='full-sec-hd';
