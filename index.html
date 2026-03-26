@@ -2939,8 +2939,9 @@ function renderPopupCards(){
 
 function validateItem(str){
   if(!str) return true; // 빈 값은 허용
-  // 숫자*숫자*숫자(영문자옵션) ex: 245*250*15, 58.3*65*9.5c, 120*127*25.5a
-  return /^\d+(\.\d+)?\*\d+(\.\d+)?\*\d+(\.\d+)?[a-zA-Z]?$/.test(str);
+  // 숫자*숫자*마지막 — 마지막은 숫자+문자+괄호 허용
+  // ex: 245*250*15, 58.3*65*9.5c, 120*127*25.5a, 100*100*10(5c)
+  return /^\d+(\.\d+)?\*\d+(\.\d+)?\*\d+(\.\d+)?[a-zA-Z]?(\(\d+(\.\d+)?[a-zA-Z]?\))?$/.test(str);
 }
 
 function saveCardInline(id,cardEl){
@@ -2948,7 +2949,7 @@ function saveCardInline(id,cardEl){
   if(!d)return;
   const itemVal=cardEl.querySelector('.cedit-item').value.trim();
   if(itemVal && !validateItem(itemVal)){
-    showToast('⚠️ 치수 양식 오류! 숫자*숫자*숫자 형식으로 입력 (예: 245*250*15, 58.3*65*9.5c)');
+    showToast('⚠️ 치수 양식 오류! 숫자*숫자*숫자 형식으로 입력 (예: 245*250*15, 58.3*65*9.5c, 100*100*10(5c))');
     cardEl.querySelector('.cedit-item').style.border='2px solid #dc2626';
     cardEl.querySelector('.cedit-item').focus();
     return;
