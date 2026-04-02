@@ -2022,7 +2022,7 @@ function getStaleInfo(d){
   return {stale, days: daysSinceLast, lastOut, lastIn, top100};
 }
 
-let qtyTop100 = new Set(); // 수량 top100 키 셋 (material|item)
+let qtyTop100 = new Map(); // 수량 top100 키 맵 (material|item → rank)
 function buildQtyTop100(){
   const qtyMap = {};
   data.forEach(d=>{
@@ -2237,7 +2237,7 @@ function handleImport(e){
 }
 
 /* ── 탭 / 패널 ── */
-const SECTIONS_ORDER='ABCDEFGHIJKLMNOP';
+const SECTIONS_ORDER='ABCDEFGHIJKLMNOPQRSTU';
 function isEven(sec){
   if(!sec) return false; // null/undefined 방어
   const idx=SECTIONS_ORDER.indexOf(String(sec).toUpperCase());
@@ -3067,7 +3067,7 @@ const WH_GROUPS=[
   {id:'JP', label:'J ~ P', secs:['J','K','L','M','N','O','P'], extra:['Y','Z'], color:'#059669',
    aisles:[[['J'],'통로 5',['K'],'통로 6',['L','M'],'통로 7',['N','O'],'통로 8',['P']]]},
   {id:'QU', label:'Q ~ U', secs:['Q','R','S','T','U'], extra:[], color:'#6366f1',
-   aisles:[[['Q','R','S','T','U']]]}
+   aisles:[[['U'],'통로 9',['Q','R'],'통로 10',['S','T']]]}
 ];
 let fullViewGroup=null;
 let fullViewTargetSec=null;
@@ -3165,12 +3165,12 @@ function renderFullOverview(wrap){
     ['O',  7,15,6,1],
     ['P',  7,16,6,1],
 
-    // Q~U 그룹 (그대로)
-    ['U',  1,11,1,1],
-    ['T',  1,12,1,5],
-    ['S',  2,12,1,5],
-    ['R',  3,12,1,5],
-    ['Q',  4,12,1,5],
+    // Q~U 그룹 (가로 배치)
+    ['U',  1,11,4,1],
+    ['Q',  1,12,4,1],
+    ['R',  1,13,4,1],
+    ['S',  1,14,4,1],
+    ['T',  1,15,4,1],
   ];
 
   const secToGroup={};
